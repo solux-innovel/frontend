@@ -1,111 +1,126 @@
 // src/screens/MY/myscreen.tsx
 
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, { Component } from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 
-const MyScreen = () => {
-  return (
-    <View style={styles.container}>
-      {/* <Text style={styles.text}>My Screen</Text> */}
-      <View style={styles.roundedBox}/>
+const profileImage = require('../../img/My/Profile.png');
+const faceImage = require('../../img/My/Face.png');
+const arrowIcon = require('../../img/My/Arrow.png');
 
-      {/* 회원정보 관리 */}
-      <View style={styles.separator}/>
-      <Text style={styles.manageInfo}>회원정보 관리</Text>
-      <Text style={styles.editInfo}>회원정보 수정</Text>
-      <Text style={styles.editPW}>비밀번호 수정</Text>
+class MyScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      userName: '눈송이'
+    };
+  }
 
-      {/* 나의 창작 */}
-      <View style={styles.separator}/>
-      <Text style={styles.myCreate}>나의 창작</Text>
-      <Text style={styles.myNovel}>내가 창작한 소설</Text>
+  render() {
+    return (
+      <View style={styles.container}>
+        <View style={styles.profileContainer}>
+          <Image
+            source={profileImage}
+            style={styles.profileImage}
+          />
+          <Image
+            source={faceImage}
+            style={styles.faceImage}
+          />
+          <Text style={styles.nameText}>{this.state.userName}님</Text>
+          <TouchableOpacity style={styles.arrowContainer} onPress={() => this.props.navigation.navigate('ProfileScreen')}>
+            <Image
+              source={arrowIcon}
+              style={styles.arrowIcon}
+            />
+          </TouchableOpacity>
+        </View>
 
-      {/* 고객센터 */}
-      <View style={styles.separator}/>
-      <Text style={styles.service}>고객센터</Text>
-      <Text style={styles.policy}>운영정책</Text>
-      <Text style={styles.question}>문의하기</Text>
-      <Text style={styles.logOut}>로그아웃</Text>
-      <Text style={styles.quitMember}>회원탈퇴</Text>
+        {/* 회원정보 관리 */}
+        <View style={styles.separator}/>
+        <Text style={styles.headerText}>회원정보 관리</Text>
+        <Text style={styles.menuText}>회원정보 수정</Text>
+        <Text style={styles.menuText}>비밀번호 수정</Text>
+
+        {/* 나의 창작 */}
+        <View style={styles.separator}/>
+        <Text style={styles.headerText}>나의 창작</Text>
+        <TouchableOpacity onPress={() => this.props.navigation.navigate('MyNovel')}>
+          <Text style={styles.menuText}>내가 창작한 소설</Text>
+        </TouchableOpacity>
+
+        {/* 고객센터 */}
+        <View style={styles.separator}/>
+        <Text style={styles.headerText}>고객센터</Text>
+        <Text style={styles.menuText}>운영정책</Text>
+        <Text style={styles.menuText}>문의하기</Text>
+        <Text style={styles.menuText}>로그아웃</Text>
+        <Text style={styles.menuText}>회원탈퇴</Text>
     </View>
-  );
-};
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-    paddingLeft: 20,
-    paddingRight: 20,
   },
-  text: {
-    fontSize: 20,
-  },
-  roundedBox: {
+  profileContainer: {
     width: '100%',
-    height: 150,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    marginTop: 16,
-    marginBottom: 8,
+    height: '25%',
+    position: 'relative',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  faceImage: {
+    position: 'absolute',
+    left: '10%',
+    top: '18%',
+    width: 100,
+    height: 100,
+  },
+  nameText: {
+    position: 'absolute',
+    left: '40%',
+    top: '40%',
+    fontSize: 18,
+    color: '#000000',
+  },
+  arrowContainer: {
+    position: 'absolute',
+    right: '5%',
+    top: '35%',
+  },
+  arrowIcon: {
+    width: 50,
+    height: 50,
   },
   separator: {
-    width: '100%',
+    width: '90%',
     height: 1,
     backgroundColor: '#B1B1B1',
     alignSelf: 'center',
-    marginTop: 16,
+    marginLeft: 20,
+    marginRight: 20,
     marginBottom: 16,
   },
-  manageInfo: {
+  headerText: {
     fontSize: 16,
-    marginBottom: 8,
+    paddingLeft: 20,
+    paddingRight: 20,
+    marginBottom: 16,
     color: '#B1B1B1',
   },
-  editInfo: {
+  menuText: {
     fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  editPW: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  myCreate: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#B1B1B1',
-  },
-  myNovel: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  service: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#B1B1B1',
-  },
-  policy: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  question: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  logOut: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#000000',
-  },
-  quitMember: {
-    fontSize: 16,
-    marginBottom: 8,
+    paddingLeft: 20,
+    paddingRight: 20,
+    marginBottom: 16,
     color: '#000000',
   }
 });
