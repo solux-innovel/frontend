@@ -59,7 +59,7 @@ const SearchScreen = () => {
   // 최근 검색어 항목 개수에 따라 동적으로 스타일을 계산
   const getRecentSearchWrapperStyle = () => ({
     borderRadius: 10,
-    borderWidth: recentSearches.length > 0 ? 1.5 : 0, // 최소 한 개 이상일 때만 테두리가 보이도록
+    borderWidth: recentSearches.length > 0 ? 2 : 0, // 최소 한 개 이상일 때만 테두리가 보이도록
     borderColor: '#BDB9FE',
     padding: 10,
   });
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     borderRadius: 10,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: '#BDB9FE',
     padding: 1,
   },
