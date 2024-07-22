@@ -38,9 +38,7 @@ const Home = () => {
             <TouchableOpacity
               key={index}
               style={styles.genreItem}
-              onPress={() => {
-                /* Navigate to genre-specific screen */
-              }}>
+              onPress={() => navigation.navigate('Genre', {genre})}>
               <Text style={styles.genreText}>{genre}</Text>
             </TouchableOpacity>
           ))}

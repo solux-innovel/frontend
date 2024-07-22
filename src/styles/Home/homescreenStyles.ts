@@ -1,76 +1,75 @@
 import {StyleSheet} from 'react-native';
 
-const styles = StyleSheet.create({
+export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
   },
   banner: {
+    width: '100%',
+    height: 240,
     alignItems: 'center',
-    marginVertical: 12,
   },
   bannerImage: {
     width: 360,
     height: 240,
-    borderRadius: 20,
+    resizeMode: 'cover',
+    alignItems: 'center',
+    borderRadius: 10,
   },
   section: {
-    marginVertical: 12,
-    paddingHorizontal: 10,
+    marginVertical: 8,
   },
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
-    marginLeft: 8,
-    marginBottom: 8,
-  },
-  arrowIcon: {
-    width: 20,
-    height: 20,
-    marginRight: '80%',
-    marginBottom: 8,
+    color: '#000',
   },
   genreScroll: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    marginLeft: 8,
-    marginRight: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   genreItem: {
-    marginRight: 15,
+    backgroundColor: '#9B9AFF',
+    borderRadius: 20,
+    marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 20,
-    backgroundColor: '#E0E0E0',
+    width: 65,
+    height: 65,
   },
   genreText: {
-    fontSize: 14,
-    color: '#000000',
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   contentScroll: {
-    flexDirection: 'row',
-    marginLeft: 8,
-    marginRight: 8,
+    paddingLeft: 16,
   },
   contentItem: {
-    marginRight: 15,
-  },
-  contentThumbnail: {
     width: 100,
     height: 150,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 10,
-    marginBottom: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  contentThumbnail: {
+    width: '100%',
+    height: '80%',
+    backgroundColor: '#e0e0e0',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  arrowIcon: {
+    width: 24,
+    height: 24,
+    marginRight: '50%',
   },
 });
-
-export default styles;
