@@ -48,7 +48,7 @@ const SearchScreen = () => {
       }
 
       await AsyncStorage.setItem('recentSearches', JSON.stringify(searches));
-      setRecentSearches(searches);
+      setRecentSearches(searches);1
     } catch (error) {
       console.error(error);
     }
