@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const imageSource = require('../../img/Create/Create8-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
+const backButtonImage = require('../../img/Create/BackSquare.png');
 
 const Create_8 = () => {
   const navigation = useNavigation();
@@ -54,6 +55,10 @@ const Create_8 = () => {
     navigation.navigate('Create_9');
   }
 
+  const onPressBackButton = () => {
+    setIsModalVisible2(false);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
@@ -90,12 +95,15 @@ const Create_8 = () => {
       <Modal animationType="slide" visible={isModalVisible2} transparent={true}>
         <View style={styles.modalBackground2}>
           <View style={styles.modalView2}>
+            <Pressable style={styles.backButton} onPress={onPressBackButton}>
+              <Image source={backButtonImage} />
+            </Pressable>
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
             <View style={styles.innerModalView}>
-              <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={true}>
-                <TextInput style={styles.textInput} multiline scrollEnabled/>
+              <ScrollView showsVerticalScrollIndicator={true}>
+                <Text style={styles.novelText}>{'추천 받은 소설 내용\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'}</Text>
               </ScrollView>
             </View>
           </View>
@@ -109,7 +117,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    marginTop: 40,
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   centeredContent: {
@@ -119,6 +127,7 @@ const styles = StyleSheet.create({
   topText: {
     fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
     color: '#000000',
     fontWeight: 'bold',
   },
@@ -180,14 +189,8 @@ const styles = StyleSheet.create({
     height: 350,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  scrollViewContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '90%',
+    padding: 20,
   },
   modalTextStyle: {
     fontSize: 18,
@@ -195,6 +198,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     margin: 5,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 7,
+    left: 6,
   },
   closeButton: {
     position: 'absolute',
@@ -212,11 +220,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  textInput: {
+  novelText: {
     color: '#000000',
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
 

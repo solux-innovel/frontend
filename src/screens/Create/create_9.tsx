@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    marginTop: 40,
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   centeredContent: {
@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   topText: {
     fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
     color: '#000000',
     fontWeight: 'bold',
   },

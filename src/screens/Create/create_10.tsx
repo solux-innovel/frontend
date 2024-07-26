@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 
 const imageSource = require('../../img/Create/Create10_image.png');
 
@@ -20,7 +20,14 @@ const Create_10 = () => {
     setButtonColor("#000000");
     setTimeout(() => {
       setButtonColor("#9B9AFF");
-      navigation.navigate('Home');
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            { name: 'Main', state: { routes: [{ name: 'Home' }] } },
+          ],
+        })
+      );
     }, 50); // 버튼 색상 복구
   };
 
@@ -44,7 +51,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    marginTop: 40,
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   centeredContent: {
@@ -54,6 +61,7 @@ const styles = StyleSheet.create({
   topText: {
     fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
     color: '#000000',
     fontWeight: 'bold',
   },

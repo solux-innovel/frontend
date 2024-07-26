@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const imageSource = require('../../img/Create/Create3-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
+const backButtonImage = require('../../img/Create/BackSquare.png');
 
 const Create_3 = () => {
   const navigation = useNavigation();
@@ -54,6 +55,10 @@ const Create_3 = () => {
     navigation.navigate('Create_4');
   }
 
+  const onPressBackButton = () => {
+    setIsModalVisible2(false);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
@@ -90,10 +95,13 @@ const Create_3 = () => {
       <Modal animationType="slide" visible={isModalVisible2} transparent={true}>
         <View style={styles.modalBackground2}>
           <View style={styles.modalView2}>
+            <Pressable style={styles.backButton} onPress={onPressBackButton}>
+              <Image source={backButtonImage} />
+            </Pressable>
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="컨셉을 직접 작성해주세요" placeholderTextColor="#FFFFFF" />
+            <TextInput style={styles.textInput} placeholder="컨셉을 직접 작성해주세요" placeholderTextColor="#FFFFFF" maxLength={100} />
           </View>
         </View>
       </Modal>
@@ -105,7 +113,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    marginTop: 40,
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   centeredContent: {
@@ -115,6 +123,7 @@ const styles = StyleSheet.create({
   topText: {
     fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
     color: '#000000',
     fontWeight: 'bold',
   },
@@ -175,6 +184,11 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 7,
+    left: 6,
   },
   closeButton: {
     position: 'absolute',
