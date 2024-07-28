@@ -1,15 +1,32 @@
 // src/screens/Create/create_4.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create4-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-const Create_4 = () => {
+// 비동기 함수로 AI로부터 추천받은 주제들을 가져오기
+const fetchRecommendedTopics = async (concept: string) => {
+  // AI 또는 서버에서 추천받은 주제들을 비동기적으로 가져옴
+  // 이 부분을 실제 AI API 호출로 대체
+  return new Promise<string[]>((resolve) => {
+    setTimeout(() => {
+      resolve([
+        '새로운 AI 추천 주제1',
+        '새로운 AI 추천 주제2',
+        '새로운 AI 추천 주제3',
+      ]);
+    }, 1000); // 1초 후에 주제 배열 반환
+  });
+};
+
+const Create_4 = ({ route }) => {
   const navigation = useNavigation();
+  const { novelId } = route.params; //전달받은 소설 id
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
@@ -17,16 +34,45 @@ const Create_4 = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  useEffect(() => {
+  //저장된 데이터 변수
+  const [savedConcept, setSavedConcept] = useState('');
 
-  }, []);
+  //입력한 주제와 선택한 주제 상태 변수
+  const [topic, setTopic] = useState('');
+  const [recommendedTopics, setRecommendedTopics] = useState<string[]>(['추천 받은 주제1', '추천 받은 주제2', '추천 받은 주제3',]);;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        //앞에서 저장된 데이터 호출
+        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        if (concept !== null) {
+          setSavedConcept(concept);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Concept:', concept);
+        }
+      } catch (error) {
+        console.error('Failed to load data.', error);
+      }
+    };
+
+    fetchData();
+  }, [novelId]);
 
   // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton1 = () => {
+  const handlePressButton1 = async () => {
     setButtonColor1("#000000");
-    setTimeout(() => {
+    setTimeout(async () => {
       setButtonColor1("#9B9AFF");
-      setIsModalVisible1(true);
+
+      // 저장된 컨셉을 사용하여 AI로부터 추천 받은 주제 배열을 가져옴
+      try {
+        const newRecommendedTopics = await fetchRecommendedTopics(savedConcept);
+        setRecommendedTopics(newRecommendedTopics);
+        setIsModalVisible1(true);
+      } catch (error) {
+        console.error('Failed to fetch recommended topics.', error);
+      }
     }, 50); // 버튼 색상 복구
   };
 
@@ -43,21 +89,37 @@ const Create_4 = () => {
     setIsModalVisible1(false);
   }
 
-  const onPressModalClose2 = () => {
-    //입력한 주제 저장하는 코드 추가
-    setIsModalVisible2(false);
-    navigation.navigate('Create_5');
+  const onPressModalClose2 = async () => {
+    //입력한 주제 저장
+    try {
+      await AsyncStorage.setItem(`novelTopic_${novelId}`, topic);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_5', { novelId });
+    } catch (e) {
+      console.error('Failed to save topic.', e);
+    }
   }
 
-  const onPressText = () => {
-    //선택한 주제 저장하는 코드 추가
-    setIsModalVisible1(false);
-    navigation.navigate('Create_5');
+  const onPressText = async (selectedTopic: string) => {
+    // 선택한 주제 저장
+    try {
+      await AsyncStorage.setItem(`novelTopic_${novelId}`, selectedTopic);
+      setIsModalVisible1(false);
+      navigation.navigate('Create_5', { novelId });
+    } catch (e) {
+      console.error('Failed to save selected topic.', e);
+    }
   }
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);
   };
+
+  const renderItem = ({ item }: { item: string }) => (
+    <TouchableOpacity onPress={() => onPressText(item)}>
+      <Text style={styles.modalTextStyle}>{item}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
@@ -84,15 +146,7 @@ const Create_4 = () => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 주제1</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 주제2</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 주제3</Text>
-            </TouchableOpacity>
+            <FlatList data={recommendedTopics} renderItem={renderItem} keyExtractor={(item, index) => index.toString()}/>
           </View>
         </View>
       </Modal>
@@ -107,7 +161,7 @@ const Create_4 = () => {
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="주제를 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} />
+            <TextInput style={styles.textInput} placeholder="주제를 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300}  value={topic} onChangeText={setTopic}/>
           </View>
         </View>
       </Modal>
@@ -190,7 +244,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     textAlign: 'center',
-    margin: 5,
+    marginTop: 20,
   },
   backButton: {
     position: 'absolute',

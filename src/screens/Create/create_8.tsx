@@ -3,13 +3,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create8-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-const Create_8 = () => {
+// 비동기 함수로 AI로부터 추천받은 소설을 가져오기
+const fetchRecommendedNovel = async (concept: string, topic: string, background: string, character: string, plot: string) => {
+  // AI 또는 서버에서 추천받은 줄거리를 비동기적으로 가져옴
+  // 이 부분을 실제 AI API 호출로 대체
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('새로운 AI 추천 소설');
+    }, 1000); // 1초 후에 소설 반환
+  });
+};
+
+const Create_8 = ({ route }) => {
   const navigation = useNavigation();
+  const { novelId } = route.params;  //전달받은 소설 id
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
@@ -17,16 +30,76 @@ const Create_8 = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  useEffect(() => {
+  // 저장된 데이터 변수
+  const [savedConcept, setSavedConcept] = useState('');
+  const [savedTopic, setSavedTopic] = useState('');
+  const [savedBackground, setSavedBackground] = useState('');
+  const [savedCharacter, setSavedCharacter] = useState('');
+  const [savedPlot, setSavedPlot] = useState('');
 
+  //선택한 소설 상태 변수
+  const [recommendedNovel, setRecommendedNovel] = useState('추천된 소설을 먼저 확인해주세요');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 앞에서 저장된 데이터 호출
+        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
+        const background = await AsyncStorage.getItem(`novelBackground_${novelId}`)
+        const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
+        const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
+
+        if (concept !== null) {
+          setSavedConcept(concept);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Concept:', concept);
+        }
+
+        if (topic !== null) {
+          setSavedTopic(topic);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Topic:', topic);
+        }
+
+        if (background !== null) {
+          setSavedBackground(background);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Background:', background);
+        }
+
+        if (character !== null) {
+          setSavedCharacter(character);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Character:', character);
+        }
+
+        if (plot !== null) {
+          setSavedPlot(plot);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Plot:', plot);
+        }
+      } catch (error) {
+          console.error('Failed to load data.', error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton1 = () => {
+  const handlePressButton1 = async () => {
     setButtonColor1("#000000");
-    setTimeout(() => {
+    setTimeout(async () => {
       setButtonColor1("#9B9AFF");
-      setIsModalVisible1(true);
+      // 저장된 데이터를 사용하여 AI로부터 추천 받은 소설을 가져옴
+      try {
+        const newRecommendedNovel = await fetchRecommendedNovel(savedConcept, savedTopic, savedBackground, savedCharacter, savedPlot);
+        setRecommendedNovel(newRecommendedNovel);
+        setIsModalVisible1(true);
+      } catch (error) {
+        console.error('Failed to fetch recommended novel.', error);
+      }
     }, 50); // 버튼 색상 복구
   };
 
@@ -43,16 +116,26 @@ const Create_8 = () => {
     setIsModalVisible1(false);
   }
 
-  const onPressModalClose2 = () => {
-    //소설 저장하는 코드 추가
-    setIsModalVisible2(false);
-    navigation.navigate('Create_9');
+  const onPressModalClose2 = async () => {
+    //선택한 소설을 저장
+    try {
+      await AsyncStorage.setItem(`finalNovel_${novelId}`, recommendedNovel);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_9', { novelId });
+    } catch (e) {
+      console.error('Failed to save novel.', e);
+    }
   }
 
-  const onPressText = () => {
-    //소설 저장하는 코드 추가
-    setIsModalVisible1(false);
-    navigation.navigate('Create_9');
+  const onPressText = async () => {
+    //선택한 소설을 저장
+    try {
+      await AsyncStorage.setItem(`finalNovel_${novelId}`, recommendedNovel);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_9', { novelId });
+    } catch (e) {
+      console.error('Failed to save novel.', e);
+    }
   }
 
   const onPressBackButton = () => {
@@ -85,7 +168,7 @@ const Create_8 = () => {
               <Image source={closeImage} />
             </Pressable>
             <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 소설</Text>
+              <Text style={styles.modalTextStyle}>{recommendedNovel}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -103,7 +186,7 @@ const Create_8 = () => {
             </Pressable>
             <View style={styles.innerModalView}>
               <ScrollView showsVerticalScrollIndicator={true}>
-                <Text style={styles.novelText}>{'추천 받은 소설 내용\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'}</Text>
+                <Text style={styles.novelText}>{recommendedNovel}</Text>
               </ScrollView>
             </View>
           </View>

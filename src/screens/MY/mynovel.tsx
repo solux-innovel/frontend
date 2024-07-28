@@ -1,45 +1,68 @@
 // MyNovel.tsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const thumbnailImage = require('../../img/My/Thumbnail.png');
 
 const MyNovel = () => {
-  const novels=[
-    { id: 1, title: '제목1', genre: '장르1' },
-    { id: 2, title: '제목2', genre: '장르2' },
-    { id: 3, title: '제목3', genre: '장르3' },
-    { id: 4, title: '제목4', genre: '장르4' },
-    { id: 5, title: '제목5', genre: '장르5' },
-  ];
+  const [novels, setNovels] = useState([]);
+
+  useEffect(() => {
+    const fetchNovels = async () => {
+      try {
+        const keys = await AsyncStorage.getAllKeys();
+        const novelKeys = keys.filter(key => key.startsWith('novelData_'));
+
+        const novelData = await Promise.all(novelKeys.map(async (key) => {
+          const data = await AsyncStorage.getItem(key);
+          return JSON.parse(data);
+        }));
+
+        setNovels(novelData);
+      } catch (error) {
+        console.error('Failed to load novels.', error);
+      }
+    };
+
+    fetchNovels();
+  }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {novels.map((novel) => (
-        <View key={novel.id} style={styles.novelContainer}>
-          <Image source={thumbnailImage} style={styles.thumbnail}/>
-          <View style={styles.textContainer}>
-            <Text style={styles.title}>{novel.title}</Text>
-            <Text style={styles.genre}>{novel.genre}</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {novels.map((novel, index) => (
+          <View key={novel.id || index} style={styles.novelContainer}>
+            <Image source={novel.thumbnail ? { uri: novel.thumbnail } : thumbnailImage} style={styles.thumbnail}/>
+            <View style={styles.textContainer}>
+              <Text style={styles.title} numberOfLines={1} ellipsizeMode='tail'>{novel.topic}</Text>
+              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{novel.concept}</Text>
+            </View>
           </View>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    position: 'relative',
+  },
   scrollContainer: {
-    padding: 20,
+    padding: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
   },
   novelContainer: {
     flexDirection: 'column',
-    alignItems: 'flex-start',
-    marginBottom: 25,
+    width: '25%',
+    padding: 8,
+    marginBottom: 5,
   },
   thumbnail: {
     width: 80,
@@ -53,6 +76,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
     color: '#000000',
+    fontWeight: 'bold',
   },
   genre: {
     fontSize: 16,

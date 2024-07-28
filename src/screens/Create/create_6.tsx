@@ -3,13 +3,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create6-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-const Create_6 = () => {
+// 비동기 함수로 AI로부터 추천받은 등장인물을 가져오기
+const fetchRecommendedCharacter = async (concept: string, topic: string, background: string) => {
+  // AI 또는 서버에서 추천받은 등장인물을 비동기적으로 가져옴
+  // 이 부분을 실제 AI API 호출로 대체
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('새로운 AI 추천 등장인물');
+    }, 1000); // 1초 후에 등장인물 반환
+  });
+};
+
+const Create_6 = ({ route }) => {
   const navigation = useNavigation();
+  const { novelId } = route.params; //전달받은 소설 id
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
@@ -17,16 +30,62 @@ const Create_6 = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  useEffect(() => {
+  // 저장된 데이터 변수
+  const [savedConcept, setSavedConcept] = useState('');
+  const [savedTopic, setSavedTopic] = useState('');
+  const [savedBackground, setSavedBackground] = useState('');
 
-  }, []);
+  //입력한 등장인물과 선택한 등장인물 상태 변수
+  const [character, setCharacter] = useState('');
+  const [recommendedCharacter, setRecommendedCharacter] = useState('추천 받은 등장인물');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 앞에서 저장된 데이터 호출
+        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
+        const background = await AsyncStorage.getItem(`novelBackground_${novelId}`)
+
+        if (concept !== null) {
+          setSavedConcept(concept);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Concept:', concept);
+        }
+
+        if (topic !== null) {
+          setSavedTopic(topic);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Topic:', topic);
+        }
+
+        if (background !== null) {
+          setSavedBackground(background);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Background:', background);
+        }
+      } catch (error) {
+          console.error('Failed to load data.', error);
+      }
+    };
+
+    fetchData();
+  }, [novelId]);
 
   // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton1 = () => {
+  const handlePressButton1 = async () => {
     setButtonColor1("#000000");
-    setTimeout(() => {
+    setTimeout(async () => {
       setButtonColor1("#9B9AFF");
-      setIsModalVisible1(true);
+
+      // 저장된 데이터를 사용하여 AI로부터 추천 받은 등장인물을 가져옴
+      try {
+        const newRecommendedCharacter = await fetchRecommendedCharacter(savedConcept, savedTopic, savedBackground);
+        setRecommendedCharacter(newRecommendedCharacter);
+        setIsModalVisible1(true);
+      } catch (error) {
+        console.error('Failed to fetch recommended character.', error);
+      }
     }, 50); // 버튼 색상 복구
   };
 
@@ -43,16 +102,26 @@ const Create_6 = () => {
     setIsModalVisible1(false);
   }
 
-  const onPressModalClose2 = () => {
-    //입력한 등장인물 저장하는 코드 추가
-    setIsModalVisible2(false);
-    navigation.navigate('Create_7');
+  const onPressModalClose2 = async () => {
+    //입력한 등장인물 저장
+    try {
+      await AsyncStorage.setItem(`novelCharacter_${novelId}`, character);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_7', { novelId });
+    } catch (e) {
+      console.error('Failed to save character.', e);
+    }
   }
 
-  const onPressText = () => {
-    //선택한 등장인물 저장하는 코드 추가
-    setIsModalVisible1(false);
-    navigation.navigate('Create_7');
+  const onPressText = async () => {
+    //선택한 등장인물 저장
+    try {
+      await AsyncStorage.setItem(`novelCharacter_${novelId}`, recommendedCharacter);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_7', { novelId });
+    } catch (e) {
+      console.error('Failed to save character.', e);
+    }
   }
 
   const onPressBackButton = () => {
@@ -85,7 +154,7 @@ const Create_6 = () => {
               <Image source={closeImage} />
             </Pressable>
             <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 등장인물</Text>
+              <Text style={styles.modalTextStyle}>{recommendedCharacter}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -101,7 +170,7 @@ const Create_6 = () => {
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="등장인물을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} />
+            <TextInput style={styles.textInput} placeholder="등장인물을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} value={character} onChangeText={setCharacter}/>
           </View>
         </View>
       </Modal>

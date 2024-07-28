@@ -3,10 +3,27 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create3-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
+
+// 비동기 함수로 AI로부터 추천받은 컨셉을 가져오기
+const fetchRecommendedConcept = async () => {
+  // AI 또는 서버에서 추천받은 컨셉을 비동기적으로 가져옴
+  // 이 부분을 실제 AI API 호출로 대체
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('새로운 AI 추천 컨셉');
+    }, 1000); // 1초 후에 컨셉 반환
+  });
+};
+
+// 고유 ID 생성기
+const generateUniqueId = () => {
+  return 'novel_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+};
 
 const Create_3 = () => {
   const navigation = useNavigation();
@@ -17,16 +34,51 @@ const Create_3 = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  useEffect(() => {
+  // 소설 ID 상태 변수 추가
+  const [novelId, setNovelId] = useState('');
 
+  //입력한 컨셉과 선택한 컨셉 상태 변수
+  const [concept, setConcept] = useState('');
+  const [recommendedConcept, setRecommendedConcept] = useState('추천 받은 컨셉');
+
+  useEffect(() => {
+    const initializeNovelId = async () => {
+      try {
+        let currentNovelId = await AsyncStorage.getItem('currentNovelId'); //현재 소설 id 불러옴
+        if (!currentNovelId) {
+          currentNovelId = generateUniqueId(); //id가 없을 경우 새로 생성
+          await AsyncStorage.setItem('currentNovelId', currentNovelId);
+        }
+        setNovelId(currentNovelId);
+      } catch (error) {
+        console.error('Failed to initialize novel ID.', error);
+      }
+    };
+
+    initializeNovelId();
   }, []);
 
+  //고유 id 확인용 코드
+  useEffect(() => {
+    if (novelId) {
+      console.log('Saved NovelId:', novelId);
+    }
+  }, [novelId]);
+
   // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton1 = () => {
+  const handlePressButton1 = async () => {
     setButtonColor1("#000000");
-    setTimeout(() => {
+    setTimeout(async () => {
       setButtonColor1("#9B9AFF");
-      setIsModalVisible1(true);
+
+      // AI로부터 추천 받은 컨셉을 가져옴
+      try {
+        const newRecommendedConcept = await fetchRecommendedConcept();
+        setRecommendedConcept(newRecommendedConcept);
+        setIsModalVisible1(true);
+      } catch (error) {
+        console.error('Failed to fetch recommended concept.', error);
+      }
     }, 50); // 버튼 색상 복구
   };
 
@@ -43,16 +95,26 @@ const Create_3 = () => {
     setIsModalVisible1(false);
   }
 
-  const onPressModalClose2 = () => {
-    //입력한 컨셉 저장하는 코드 추가
-    setIsModalVisible2(false);
-    navigation.navigate('Create_4');
+  const onPressModalClose2 = async () => {
+    //입력한 컨셉 저장
+    try {
+      await AsyncStorage.setItem(`novelConcept_${novelId}`, concept); //id와 함께 저장
+      setIsModalVisible2(false);
+      navigation.navigate('Create_4', { novelId }); //id 전달
+    } catch (e) {
+      console.error('Failed to save concept.', e);
+    }
   }
 
-  const onPressText = () => {
-    //선택한 컨셉 저장하는 코드 추가
-    setIsModalVisible1(false);
-    navigation.navigate('Create_4');
+  const onPressText = async () => {
+    //선택한 컨셉 저장
+    try {
+      await AsyncStorage.setItem(`novelConcept_${novelId}`, recommendedConcept); //id와 함께 저장
+      setIsModalVisible1(false);
+      navigation.navigate('Create_4', { novelId }); //id 전달
+    } catch (e) {
+      console.error('Failed to save concept.', e);
+    }
   }
 
   const onPressBackButton = () => {
@@ -85,7 +147,7 @@ const Create_3 = () => {
               <Image source={closeImage} />
             </Pressable>
             <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 컨셉</Text>
+              <Text style={styles.modalTextStyle}>{recommendedConcept}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -101,7 +163,7 @@ const Create_3 = () => {
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="컨셉을 직접 작성해주세요" placeholderTextColor="#FFFFFF" maxLength={100} />
+            <TextInput style={styles.textInput} placeholder="컨셉을 직접 작성해주세요" placeholderTextColor="#FFFFFF" maxLength={100} value={concept} onChangeText={setConcept}/>
           </View>
         </View>
       </Modal>

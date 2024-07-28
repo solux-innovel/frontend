@@ -3,13 +3,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create5-1_image.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-const Create_5 = () => {
+// 비동기 함수로 AI로부터 추천받은 배경을 가져오기
+const fetchRecommendedBackground = async (concept: string, topic: string) => {
+  // AI 또는 서버에서 추천받은 배경을 비동기적으로 가져옴
+  // 이 부분을 실제 AI API 호출로 대체
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve('새로운 AI 추천 배경');
+    }, 1000); // 1초 후에 배경 반환
+  });
+};
+
+const Create_5 = ({ route }) => {
   const navigation = useNavigation();
+  const { novelId } = route.params; //전달받은 소설 id
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
@@ -17,16 +30,54 @@ const Create_5 = () => {
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  useEffect(() => {
+  // 저장된 데이터 변수
+  const [savedConcept, setSavedConcept] = useState('');
+  const [savedTopic, setSavedTopic] = useState('');
 
-  }, []);
+  //입력한 배경과 선택한 배경 상태 변수
+  const [background, setBackground] = useState('');
+  const [recommendedBackground, setRecommendedBackground] = useState('추천 받은 배경');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 앞에서 저장된 데이터 호출
+        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
+
+        if (concept !== null) {
+          setSavedConcept(concept);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Concept:', concept);
+        }
+
+        if (topic !== null) {
+          setSavedTopic(topic);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Topic:', topic);
+        }
+      } catch (error) {
+          console.error('Failed to load data.', error);
+      }
+    };
+
+    fetchData();
+  }, [novelId]);
 
   // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton1 = () => {
+  const handlePressButton1 = async () => {
     setButtonColor1("#000000");
-    setTimeout(() => {
+    setTimeout(async () => {
       setButtonColor1("#9B9AFF");
-      setIsModalVisible1(true);
+
+      // 저장된 데이터를 사용하여 AI로부터 추천 받은 배경을 가져옴
+      try {
+        const newRecommendedBackground = await fetchRecommendedBackground(savedConcept, savedTopic);
+        setRecommendedBackground(newRecommendedBackground);
+        setIsModalVisible1(true);
+      } catch (error) {
+        console.error('Failed to fetch recommended background.', error);
+      }
     }, 50); // 버튼 색상 복구
   };
 
@@ -43,16 +94,26 @@ const Create_5 = () => {
     setIsModalVisible1(false);
   }
 
-  const onPressModalClose2 = () => {
-    //입력한 배경 저장하는 코드 추가
-    setIsModalVisible2(false);
-    navigation.navigate('Create_6');
+  const onPressModalClose2 = async () => {
+    //입력한 배경 저장
+    try {
+      await AsyncStorage.setItem(`novelBackground_${novelId}`, background);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_6', { novelId });
+    } catch (e) {
+      console.error('Failed to save background.', e);
+    }
   }
 
-  const onPressText = () => {
-    //선택한 배경 저장하는 코드 추가
-    setIsModalVisible1(false);
-    navigation.navigate('Create_6');
+  const onPressText = async () => {
+    //선택한 배경 저장
+    try {
+      await AsyncStorage.setItem(`novelBackground_${novelId}`, recommendedBackground);
+      setIsModalVisible2(false);
+      navigation.navigate('Create_6', { novelId });
+    } catch (e) {
+      console.error('Failed to save background.', e);
+    }
   }
 
   const onPressBackButton = () => {
@@ -85,7 +146,7 @@ const Create_5 = () => {
               <Image source={closeImage} />
             </Pressable>
             <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>추천 받은 배경</Text>
+              <Text style={styles.modalTextStyle}>{recommendedBackground}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -101,7 +162,7 @@ const Create_5 = () => {
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="배경을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} />
+            <TextInput style={styles.textInput} placeholder="배경을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} value={background} onChangeText={setBackground}/>
           </View>
         </View>
       </Modal>
