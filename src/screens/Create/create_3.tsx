@@ -1,11 +1,12 @@
 // src/screens/Create/create_3.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const imageSource = require('../../img/Create/Create3-1_image.png');
+const initialImageSource = require('../../img/Create/Create3-1_image.png');
+const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
@@ -30,6 +31,7 @@ const Create_3 = () => {
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
+  const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
@@ -40,6 +42,35 @@ const Create_3 = () => {
   //입력한 컨셉과 선택한 컨셉 상태 변수
   const [concept, setConcept] = useState('');
   const [recommendedConcept, setRecommendedConcept] = useState('추천 받은 컨셉');
+  const [isTextSelected, setIsTextSelected] = useState(false); // 상태 변수 추가
+
+  // 최초 화면 상태 변수
+  const [buttonText, setButtonText] = useState("컨셉을 추천받고 싶어요");
+  const [image, setImage] = useState(initialImageSource);
+  const [bottomText, setBottomText] = useState('작성 해주신 아이디어 키워드를\n바탕으로 컨셉을 추천해드립니다');
+
+  // 사용자명 상태 변수
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedUserName = await AsyncStorage.getItem('userName');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user name.', error);
+      }
+    };
+
+    fetchUserName();
+    // 사용자명 변경을 감지하기 위한 interval 설정
+    const interval = setInterval(fetchUserName, 1000); // 1초마다 업데이트 체크
+
+    // 컴포넌트 언마운트 시 interval 클리어
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const initializeNovelId = async () => {
@@ -93,6 +124,11 @@ const Create_3 = () => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
+
+    // 다시 추천받기 버튼, 이미지, 텍스트로 변경
+    setButtonText("컨셉을 다시 추천받고 싶어요");
+    setImage(againImage);
+    setBottomText('추천받은 컨셉이 마음에 들지 않는다면\n컨셉을 다시 추천해드릴 수 있습니다\n창작자가 컨셉을 직접 작성할 수도 있습니다');
   }
 
   const onPressModalClose2 = async () => {
@@ -106,32 +142,45 @@ const Create_3 = () => {
     }
   }
 
-  const onPressText = async () => {
-    //선택한 컨셉 저장
-    try {
-      await AsyncStorage.setItem(`novelConcept_${novelId}`, recommendedConcept); //id와 함께 저장
-      setIsModalVisible1(false);
-      navigation.navigate('Create_4', { novelId }); //id 전달
-    } catch (e) {
-      console.error('Failed to save concept.', e);
-    }
+  const onPressOkayButton = async () => {
+    setOkayButtonColor("#000000");
+    setTimeout(async () => {
+      setOkayButtonColor("#9B9AFF");
+
+      // 선택된 컨셉 저장
+      try {
+        if (isTextSelected) {
+          await AsyncStorage.setItem(`novelConcept_${novelId}`, recommendedConcept); // id와 함께 저장
+          setIsModalVisible1(false);
+          navigation.navigate('Create_4', { novelId }); // id 전달
+        } else {
+          Alert.alert('경고','컨셉을 선택해주세요.');
+        }
+      } catch (e) {
+        console.error('Failed to save concept.', e);
+      }
+    }, 50); // 버튼 색상 복구
   }
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);
   };
 
+  const handleTextPress = () => {
+    setIsTextSelected((prev) => !prev); // 토글 기능
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{'눈송이 창작자님의 소설은\n어떤 컨셉이길 원하나요?'}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'작성 해주신 아이디어 키워드를\n바탕으로 컨셉을 추천해드립니다'}</Text>
+        <Text style={styles.topText}>{`${userName} 창작자님의 소설은\n어떤 컨셉이길 원하나요?`}</Text>
+        <Image source={image} style={styles.image}/>
+        <Text style={styles.bottomText}>{bottomText}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
       <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1, bottom: 100,}]} onPress={handlePressButton1}>
-        <Text style={styles.buttonText}>컨셉을 추천받고 싶어요</Text>
+        <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
       {/* 두번째 버튼 */}
@@ -146,8 +195,14 @@ const Create_3 = () => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>{recommendedConcept}</Text>
+            <Pressable onPress={handleTextPress}>
+              <Text style={[styles.modalTextStyle, { color: isTextSelected ? '#A2A2A2' : '#000000' }]}>
+                {recommendedConcept}
+              </Text>
+            </Pressable>
+            {/* 세번째 버튼 (추천 내용 확정) */}
+            <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
+              <Text style={styles.buttonText}>확정</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -197,7 +252,7 @@ const styles = StyleSheet.create({
   image: {
     width: 300,
     height: 300,
-    margin: 30,
+    margin: 20,
   },
   button: {
     bottom: 30,
@@ -227,12 +282,11 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: '30%',
+    height: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   modalView2: {
     width: '100%',
@@ -242,6 +296,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTextStyle: {
+    marginTop: 55,
     fontSize: 18,
     color: '#000000',
     fontWeight: 'bold',
@@ -267,6 +322,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  okayButton: {
+    bottom: 20,
+    position: 'absolute',
+    height: 40,
+    width: '40%',
+    borderRadius: 15,
+    backgroundColor: "#9B9AFF",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textInput: {
     color: '#FFFFFF',

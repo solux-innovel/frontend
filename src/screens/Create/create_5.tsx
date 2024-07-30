@@ -5,18 +5,19 @@ import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pres
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const imageSource = require('../../img/Create/Create5-1_image.png');
+const initialImageSource = require('../../img/Create/Create5-1_image.png');
+const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-// 비동기 함수로 AI로부터 추천받은 배경을 가져오기
-const fetchRecommendedBackground = async (concept: string, topic: string) => {
-  // AI 또는 서버에서 추천받은 배경을 비동기적으로 가져옴
+// 비동기 함수로 AI로부터 추천받은 등장인물을 가져오기
+const fetchRecommendedCharacter = async (concept: string, topic: string) => {
+  // AI 또는 서버에서 추천받은 등장인물을 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve('새로운 AI 추천 배경');
-    }, 1000); // 1초 후에 배경 반환
+      resolve('새로운 AI 추천 등장인물');
+    }, 1000); // 1초 후에 등장인물 반환
   });
 };
 
@@ -26,6 +27,7 @@ const Create_5 = ({ route }) => {
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
+  const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
@@ -34,9 +36,37 @@ const Create_5 = ({ route }) => {
   const [savedConcept, setSavedConcept] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
 
-  //입력한 배경과 선택한 배경 상태 변수
-  const [background, setBackground] = useState('');
-  const [recommendedBackground, setRecommendedBackground] = useState('추천 받은 배경');
+  //입력한 등장인물과 선택한 등장인물 상태 변수
+  const [character, setCharacter] = useState('');
+  const [recommendedCharacter, setRecommendedCharacter] = useState('추천 받은 등장인물');
+
+  // 최초 화면 상태 변수
+  const [buttonText, setButtonText] = useState("등장인물을 추천받고 싶어요");
+  const [image, setImage] = useState(initialImageSource);
+  const [bottomText, setBottomText] = useState('키워드, 컨셉, 주제를 바탕으로\n소설에 어울릴 만한 등장인물을 추천해드립니다');
+
+  // 사용자명 상태 변수
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedUserName = await AsyncStorage.getItem('userName');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user name.', error);
+      }
+    };
+
+    fetchUserName();
+    // 사용자명 변경을 감지하기 위한 interval 설정
+    const interval = setInterval(fetchUserName, 1000); // 1초마다 업데이트 체크
+
+    // 컴포넌트 언마운트 시 interval 클리어
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +83,7 @@ const Create_5 = ({ route }) => {
 
         if (topic !== null) {
           setSavedTopic(topic);
-          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           //console.log('Saved Topic:', topic);
         }
       } catch (error) {
@@ -70,13 +100,13 @@ const Create_5 = ({ route }) => {
     setTimeout(async () => {
       setButtonColor1("#9B9AFF");
 
-      // 저장된 데이터를 사용하여 AI로부터 추천 받은 배경을 가져옴
+      // 저장된 데이터를 사용하여 AI로부터 추천 받은 등장인물을 가져옴
       try {
-        const newRecommendedBackground = await fetchRecommendedBackground(savedConcept, savedTopic);
-        setRecommendedBackground(newRecommendedBackground);
+        const newRecommendedCharacter = await fetchRecommendedCharacter(savedConcept, savedTopic);
+        setRecommendedCharacter(newRecommendedCharacter);
         setIsModalVisible1(true);
       } catch (error) {
-        console.error('Failed to fetch recommended background.', error);
+        console.error('Failed to fetch recommended character.', error);
       }
     }, 50); // 버튼 색상 복구
   };
@@ -92,28 +122,38 @@ const Create_5 = ({ route }) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
+
+    // 다시 추천받기 버튼, 이미지, 텍스트로 변경
+    setButtonText("등장인물을 다시 추천받고 싶어요");
+    setImage(againImage);
+    setBottomText('추천받은 등장인물이 마음에 들지 않는다면\n등장인물을 다시 추천해드릴 수 있습니다\n창작자가 등장인물을 직접 작성할 수도 있습니다');
   }
 
   const onPressModalClose2 = async () => {
-    //입력한 배경 저장
+    //입력한 등장인물 저장
     try {
-      await AsyncStorage.setItem(`novelBackground_${novelId}`, background);
+      await AsyncStorage.setItem(`novelCharacter_${novelId}`, character);
       setIsModalVisible2(false);
       navigation.navigate('Create_6', { novelId });
     } catch (e) {
-      console.error('Failed to save background.', e);
+      console.error('Failed to save character.', e);
     }
   }
 
-  const onPressText = async () => {
-    //선택한 배경 저장
-    try {
-      await AsyncStorage.setItem(`novelBackground_${novelId}`, recommendedBackground);
-      setIsModalVisible2(false);
-      navigation.navigate('Create_6', { novelId });
-    } catch (e) {
-      console.error('Failed to save background.', e);
-    }
+  const onPressOkayButton = async () => {
+    setOkayButtonColor("#000000");
+    setTimeout(async () => {
+      setOkayButtonColor("#9B9AFF");
+
+      //선택한 등장인물 저장
+      try {
+        await AsyncStorage.setItem(`novelCharacter_${novelId}`, recommendedCharacter); //id와 함께 저장
+        setIsModalVisible1(false);
+        navigation.navigate('Create_6', { novelId }); //id 전달
+      } catch (e) {
+        console.error('Failed to save character.', e);
+      }
+    }, 50); // 버튼 색상 복구
   }
 
   const onPressBackButton = () => {
@@ -123,19 +163,19 @@ const Create_5 = ({ route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{'눈송이 창작자님의 소설은\n어떤 배경이길 원하나요?'}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'키워드, 컨셉, 주제를 바탕으로\n소설에 어울릴 만한 배경을 추천해드립니다'}</Text>
+        <Text style={styles.topText}>{`${userName} 창작자님의 소설에\n등장하는 친구들이 궁금해요!`}</Text>
+        <Image source={image} style={styles.image}/>
+        <Text style={styles.bottomText}>{bottomText}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
       <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1, bottom: 100,}]} onPress={handlePressButton1}>
-        <Text style={styles.buttonText}>배경을 추천받고 싶어요</Text>
+        <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
       {/* 두번째 버튼 */}
       <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor2}]} onPress={handlePressButton2}>
-        <Text style={styles.buttonText}>배경을 직접 작성하고 싶어요</Text>
+        <Text style={styles.buttonText}>등장인물을 직접 작성하고 싶어요</Text>
       </TouchableOpacity>
 
       {/* 첫번째 모달 */}
@@ -145,8 +185,9 @@ const Create_5 = ({ route }) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <TouchableOpacity onPress={onPressText}>
-              <Text style={styles.modalTextStyle}>{recommendedBackground}</Text>
+            <Text style={styles.modalTextStyle}>{recommendedCharacter}</Text>
+            <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
+              <Text style={styles.buttonText}>확정</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -162,7 +203,7 @@ const Create_5 = ({ route }) => {
             <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="배경을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} value={background} onChangeText={setBackground}/>
+            <TextInput style={styles.textInput} placeholder="등장인물을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} value={character} onChangeText={setCharacter}/>
           </View>
         </View>
       </Modal>
@@ -194,9 +235,9 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   image: {
-    width: 300,
+    width: 320,
     height: 300,
-    margin: 30,
+    margin: 20,
   },
   button: {
     bottom: 30,
@@ -226,12 +267,11 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: '30%',
+    height: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   modalView2: {
     width: '100%',
@@ -241,6 +281,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalTextStyle: {
+    marginTop: 55,
     fontSize: 18,
     color: '#000000',
     fontWeight: 'bold',
@@ -267,6 +308,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  okayButton: {
+    bottom: 20,
+    position: 'absolute',
+    height: 40,
+    width: '40%',
+    borderRadius: 15,
+    backgroundColor: "#9B9AFF",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textInput: {
     color: '#FFFFFF',

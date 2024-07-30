@@ -44,6 +44,7 @@ const Create_9 = ({ route }) => {
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
   const [savedNovel, setSavedNovel] = useState('');
+  const [savedTitle, setSavedTitle] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,6 +56,7 @@ const Create_9 = ({ route }) => {
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
         const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
+        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`)
 
         if (concept !== null) {
           setSavedConcept(concept);
@@ -90,6 +92,12 @@ const Create_9 = ({ route }) => {
           setSavedNovel(novel);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           //console.log('Saved Novel:', novel);
+        }
+
+        if (title !== null) {
+          setSavedTitle(title);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Title:', title);
         }
 
         // 저장된 내용을 바탕으로 AI 추천 이미지를 가져와서 설정

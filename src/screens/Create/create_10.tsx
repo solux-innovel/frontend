@@ -20,7 +20,31 @@ const Create_10 = ({ route }) => {
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
   const [savedNovel, setSavedNovel] = useState('');
+  const [savedTitle, setSavedTitle] = useState('');
   const [savedThumbnail, setSavedThumbnail] = useState('');
+
+  // 사용자명 상태 변수
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedUserName = await AsyncStorage.getItem('userName');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user name.', error);
+      }
+    };
+
+    fetchUserName();
+    // 사용자명 변경을 감지하기 위한 interval 설정
+    const interval = setInterval(fetchUserName, 1000); // 1초마다 업데이트 체크
+
+    // 컴포넌트 언마운트 시 interval 클리어
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,6 +56,7 @@ const Create_10 = ({ route }) => {
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
         const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
+        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`)
         const thumbnail = await AsyncStorage.getItem(`novelThumbnail_${novelId}`)
 
         if (concept !== null) {
@@ -70,10 +95,17 @@ const Create_10 = ({ route }) => {
           //console.log('Saved Novel:', novel);
         }
 
+        if (title !== null) {
+          setSavedTitle(title);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Title:', title);
+        }
+
         if (thumbnail !== null) {
           const parsedThumbnail = JSON.parse(thumbnail);
           setSavedThumbnail(parsedThumbnail);
-          //.log('Saved Thumbnail:', parsedThumbnail);
+          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Thumbnail:', parsedThumbnail);
         }
       } catch (error) {
           console.error('Failed to load data.', error);
@@ -90,12 +122,14 @@ const Create_10 = ({ route }) => {
       setButtonColor("#9B9AFF");
       // 전달할 데이터 객체 생성
       const novelData = {
+        id: novelId,
         concept: savedConcept,
         topic: savedTopic,
         background: savedBackground,
         character: savedCharacter,
         plot: savedPlot,
         novel: savedNovel,
+        title: savedTitle,
         thumbnail: savedThumbnail,
       };
       try {
@@ -123,14 +157,14 @@ const Create_10 = ({ route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{'눈송이 창작자님이 창작한\n소설을 발행하는 데에 성공했습니다!'}</Text>
+        <Text style={styles.topText}>{`${userName} 창작자님이 창작한\n소설을 발행하는 데에 성공했습니다!`}</Text>
         <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'소설을 발행하신 것을 축하드립니다!\n앞으로도 눈송이 창작자님의 소설 창작을\n이노블이 열심히 응원하고 돕겠습니다'}</Text>
+        <Text style={styles.bottomText}>{`소설을 발행하신 것을 축하드립니다!\n앞으로도 ${userName} 창작자님의 소설 창작을\n이노블이 열심히 응원하고 돕겠습니다`}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
       <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor}]} onPress={handlePressButton}>
-        <Text style={styles.buttonText}>홈 화면으로 돌아가기</Text>
+        <Text style={styles.buttonText}>저장하고 홈 화면으로 돌아가기</Text>
       </TouchableOpacity>
     </View>
   );

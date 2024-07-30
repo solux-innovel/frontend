@@ -1,66 +1,64 @@
 // src/screens/MY/myscreen.tsx
 
-import React, { Component } from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const profileImage = require('../../img/My/Profile.png');
 const faceImage = require('../../img/My/Face.png');
 const arrowIcon = require('../../img/My/Arrow.png');
 
-class MyScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      userName: '눈송이'
+const MyScreen = ({ navigation }) => {
+  //사용자명 상태 변수
+  const [userName, setUserName] = useState('눈송이');
+
+  // 사용자명 저장하기
+  useEffect(() => {
+    const saveUserName = async () => {
+      try {
+        await AsyncStorage.setItem('userName', userName);
+      } catch (error) {
+        console.error('Failed to save the user name.', error);
+      }
     };
-  }
 
-  render() {
-    return (
-      <View style={styles.container}>
-        <View style={styles.profileContainer}>
-          <Image
-            source={profileImage}
-            style={styles.profileImage}
-          />
-          <Image
-            source={faceImage}
-            style={styles.faceImage}
-          />
-          <Text style={styles.nameText}>{this.state.userName}님</Text>
-          <TouchableOpacity style={styles.arrowContainer} onPress={() => this.props.navigation.navigate('ProfileScreen')}>
-            <Image
-              source={arrowIcon}
-              style={styles.arrowIcon}
-            />
-          </TouchableOpacity>
-        </View>
+    saveUserName();
+  }, [userName]); // userName 상태가 변경될 때마다 실행
 
-        {/* 회원정보 관리 */}
-        <View style={styles.separator}/>
-        <Text style={styles.headerText}>회원정보 관리</Text>
-        <Text style={styles.menuText}>회원정보 수정</Text>
-        <Text style={styles.menuText}>비밀번호 수정</Text>
-
-        {/* 나의 창작 */}
-        <View style={styles.separator}/>
-        <Text style={styles.headerText}>나의 창작</Text>
-        <TouchableOpacity onPress={() => this.props.navigation.navigate('MyNovel')}>
-          <Text style={styles.menuText}>내가 창작한 소설</Text>
+  return (
+    <View style={styles.container}>
+      <View style={styles.profileContainer}>
+        <Image source={profileImage} style={styles.profileImage} />
+        <Image source={faceImage} style={styles.faceImage} />
+        <Text style={styles.nameText}>{userName}님</Text>
+        <TouchableOpacity style={styles.arrowContainer} onPress={() => navigation.navigate('ProfileScreen')}>
+          <Image source={arrowIcon} style={styles.arrowIcon} />
         </TouchableOpacity>
+      </View>
 
-        {/* 고객센터 */}
-        <View style={styles.separator}/>
-        <Text style={styles.headerText}>고객센터</Text>
-        <Text style={styles.menuText}>운영정책</Text>
-        <Text style={styles.menuText}>문의하기</Text>
-        <Text style={styles.menuText}>로그아웃</Text>
-        <Text style={styles.menuText}>회원탈퇴</Text>
+      {/* 회원정보 관리 */}
+      <View style={styles.separator} />
+      <Text style={styles.headerText}>회원정보 관리</Text>
+      <Text style={styles.menuText}>회원정보 수정</Text>
+      <Text style={styles.menuText}>비밀번호 수정</Text>
+
+      {/* 나의 창작 */}
+      <View style={styles.separator} />
+      <Text style={styles.headerText}>나의 창작</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('MyNovel')}>
+        <Text style={styles.menuText}>내가 창작한 소설</Text>
+      </TouchableOpacity>
+
+      {/* 고객센터 */}
+      <View style={styles.separator} />
+      <Text style={styles.headerText}>고객센터</Text>
+      <Text style={styles.menuText}>운영정책</Text>
+      <Text style={styles.menuText}>문의하기</Text>
+      <Text style={styles.menuText}>로그아웃</Text>
+      <Text style={styles.menuText}>회원탈퇴</Text>
     </View>
-    );
-  }
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

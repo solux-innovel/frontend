@@ -1,11 +1,12 @@
 // src/screens/Create/create_4.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const imageSource = require('../../img/Create/Create4-1_image.png');
+const initialImageSource = require('../../img/Create/Create4-1_image.png');
+const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
@@ -30,6 +31,7 @@ const Create_4 = ({ route }) => {
 
   const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
   const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
+  const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
@@ -40,6 +42,35 @@ const Create_4 = ({ route }) => {
   //입력한 주제와 선택한 주제 상태 변수
   const [topic, setTopic] = useState('');
   const [recommendedTopics, setRecommendedTopics] = useState<string[]>(['추천 받은 주제1', '추천 받은 주제2', '추천 받은 주제3',]);;
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  // 최초 화면 상태 변수
+  const [buttonText, setButtonText] = useState("주제를 추천받고 싶어요");
+  const [image, setImage] = useState(initialImageSource);
+  const [bottomText, setBottomText] = useState('작성 해주신 키워드와 컨셉을 바탕으로\n주제를 3가지 추천해드립니다');
+
+  // 사용자명 상태 변수
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedUserName = await AsyncStorage.getItem('userName');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user name.', error);
+      }
+    };
+
+    fetchUserName();
+    // 사용자명 변경을 감지하기 위한 interval 설정
+    const interval = setInterval(fetchUserName, 1000); // 1초마다 업데이트 체크
+
+    // 컴포넌트 언마운트 시 interval 클리어
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,6 +118,11 @@ const Create_4 = ({ route }) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
+
+    // 다시 추천받기 버튼, 이미지, 텍스트로 변경
+    setButtonText("주제를 다시 추천받고 싶어요");
+    setImage(againImage);
+    setBottomText('추천받은 주제가 마음에 들지 않는다면\n주제를 다시 추천해드릴 수 있습니다\n창작자가 주제를 직접 작성할 수도 있습니다');
   }
 
   const onPressModalClose2 = async () => {
@@ -100,38 +136,53 @@ const Create_4 = ({ route }) => {
     }
   }
 
-  const onPressText = async (selectedTopic: string) => {
-    // 선택한 주제 저장
-    try {
-      await AsyncStorage.setItem(`novelTopic_${novelId}`, selectedTopic);
-      setIsModalVisible1(false);
-      navigation.navigate('Create_5', { novelId });
-    } catch (e) {
-      console.error('Failed to save selected topic.', e);
-    }
+  const onPressOkayButton = async () => {
+    setOkayButtonColor("#000000");
+    setTimeout(async () => {
+      setOkayButtonColor("#9B9AFF");
+
+      if (selectedTopic) {
+        //선택한 주제 저장
+        try {
+          await AsyncStorage.setItem(`novelTopic_${novelId}`, selectedTopic); //id와 함께 저장
+          setIsModalVisible1(false);
+          navigation.navigate('Create_5', { novelId }); //id 전달
+        } catch (e) {
+          console.error('Failed to save topic.', e);
+        }
+      } else {
+        Alert.alert('경고','주제를 선택해주세요.');
+      }
+    }, 50); // 버튼 색상 복구
   }
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);
   };
 
+  const handleTopicPress = (topic: string) => {
+    setSelectedTopic(topic);
+  };
+
   const renderItem = ({ item }: { item: string }) => (
-    <TouchableOpacity onPress={() => onPressText(item)}>
-      <Text style={styles.modalTextStyle}>{item}</Text>
-    </TouchableOpacity>
+    <Pressable onPress={() => handleTopicPress(item)}>
+      <Text style={[styles.modalTextStyle, { color: selectedTopic === item ? '#A2A2A2' : '#000000' }]}>
+        {item}
+      </Text>
+    </Pressable>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{'눈송이 창작자님의 소설은\n어떤 주제이길 원하나요?'}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'작성 해주신 키워드와 컨셉을 바탕으로\n주제를 3가지 추천해드립니다'}</Text>
+        <Text style={styles.topText}>{`${userName} 창작자님의 소설은\n어떤 주제이길 원하나요?`}</Text>
+        <Image source={image} style={styles.image}/>
+        <Text style={styles.bottomText}>{bottomText}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
       <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1, bottom: 100,}]} onPress={handlePressButton1}>
-        <Text style={styles.buttonText}>주제를 추천받고 싶어요</Text>
+        <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
       {/* 두번째 버튼 */}
@@ -147,6 +198,10 @@ const Create_4 = ({ route }) => {
               <Image source={closeImage} />
             </Pressable>
             <FlatList data={recommendedTopics} renderItem={renderItem} keyExtractor={(item, index) => index.toString()}/>
+            {/* 세번째 버튼 (추천 내용 확정) */}
+            <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
+              <Text style={styles.buttonText}>확정</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -193,9 +248,9 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   image: {
-    width: 320,
-    height: 270,
-    margin: 40,
+    width: 340,
+    height: 300,
+    margin: 20,
   },
   button: {
     bottom: 30,
@@ -225,7 +280,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: '30%',
+    height: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 35,
@@ -244,7 +299,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 16,
   },
   backButton: {
     position: 'absolute',
@@ -266,6 +321,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  okayButton: {
+    bottom: 20,
+    position: 'absolute',
+    height: 40,
+    width: '40%',
+    borderRadius: 15,
+    backgroundColor: "#9B9AFF",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textInput: {
     color: '#FFFFFF',
