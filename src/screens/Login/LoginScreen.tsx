@@ -30,9 +30,9 @@ const LoginScreen: React.FC = () => {
       const nickname = profile.nickname || 'Unnamed';
       const email = profile.email || 'No Email';
 
-      console.log('ID:', id);
-      console.log('닉네임:', nickname);
-      console.log('이메일:', email);
+      console.log('id:', id);
+      console.log('nickname:', nickname);
+      console.log('email:', email);
 
       login(); // 로그인 상태 업데이트
       navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
