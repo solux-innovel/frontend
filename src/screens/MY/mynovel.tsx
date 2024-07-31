@@ -26,8 +26,20 @@ const MyNovel = () => {
       const novelKeys = keys.filter(key => key.startsWith('novelData_'));
 
       const novelData = await Promise.all(novelKeys.map(async (key) => {
-        const data = await AsyncStorage.getItem(key);
-        return JSON.parse(data);
+      const data = await AsyncStorage.getItem(key);
+      const parsedData = JSON.parse(data);
+
+      // concept 값이 JSON 문자열일 경우 배열로 변환
+      if (typeof parsedData.concept === 'string') {
+        try {
+          parsedData.concept = JSON.parse(parsedData.concept);
+        } catch (error) {
+          // JSON 파싱 실패 시 문자열 그대로 사용
+          parsedData.concept = parsedData.concept;
+        }
+      }
+
+      return parsedData;
       }));
 
       setNovels(novelData);
@@ -41,7 +53,9 @@ const MyNovel = () => {
   const handlePress = (novel) => {
     setSelectedNovel(novel);
     setTitle(novel.title);
-    setConcept(novel.concept);
+    //setConcept(novel.concept);
+    // 배열을 문자열로 변환하여 설정
+    setConcept(Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept || '');
     setNovelContent(novel.novel);
     setModalVisible(true);
   };
@@ -54,7 +68,7 @@ const MyNovel = () => {
 
   const handleSave = async () => {
     try {
-      const updatedNovel = { ...selectedNovel, title, concept, novel: novelContent };
+      const updatedNovel = { ...selectedNovel, title, concept: concept.split(',').map(c => c.trim()), novel: novelContent };
       await AsyncStorage.setItem(`novelData_${selectedNovel.id}`, JSON.stringify(updatedNovel));
       console.log('Saving novel and fetching novels again...');
       await fetchNovels();
@@ -96,7 +110,7 @@ const MyNovel = () => {
             </TouchableOpacity>
             <View style={styles.textContainer}>
               <Text style={styles.title} numberOfLines={1} ellipsizeMode='tail'>{novel.title}</Text>
-              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{novel.concept}</Text>
+              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept}</Text>
             </View>
           </View>
         ))}
@@ -156,7 +170,7 @@ const MyNovel = () => {
                 ) : (
                   <View>
                     <Text style={styles.modalTitle}>{selectedNovel.title}</Text>
-                    <Text style={styles.modalGenre}>{selectedNovel.concept}</Text>
+                    <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.concept) ? selectedNovel.concept.join(', ') : selectedNovel.concept}</Text>
                     <View style={styles.modalTextContainer}>
                       <Text style={styles.modalText}>{selectedNovel.novel}</Text>
                     </View>

@@ -165,11 +165,12 @@ const Create_4 = ({ route }) => {
   };
 
   const renderItem = ({ item }: { item: string }) => (
-    <Pressable onPress={() => handleTopicPress(item)}>
-      <Text style={[styles.modalTextStyle, { color: selectedTopic === item ? '#A2A2A2' : '#000000' }]}>
-        {item}
-      </Text>
-    </Pressable>
+    <TouchableOpacity
+      style={[styles.topicButton, selectedTopic === item && styles.selectedTopicButton]}
+      onPress={() => handleTopicPress(item)}
+    >
+      <Text style={styles.topicButtonText}>{item}</Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -197,11 +198,13 @@ const Create_4 = ({ route }) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <FlatList data={recommendedTopics} renderItem={renderItem} keyExtractor={(item, index) => index.toString()}/>
+            <FlatList data={recommendedTopics} renderItem={renderItem} keyExtractor={(item, index) => index.toString()} contentContainerStyle={styles.flatListContentContainer} />
             {/* 세번째 버튼 (추천 내용 확정) */}
+            <View style={styles.buttonContainer}>
             <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
               <Text style={styles.buttonText}>확정</Text>
             </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -280,10 +283,9 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 35,
+    padding: 25,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -311,6 +313,7 @@ const styles = StyleSheet.create({
     top: 5,
     right: 5,
     padding: 5,
+    zIndex: 1,
   },
   saveButton: {
     position: 'absolute',
@@ -322,14 +325,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  buttonContainer: {
+    alignItems: 'center', // 중앙 정렬
+    justifyContent: 'center',
+    width: '100%',
+  },
   okayButton: {
-    bottom: 20,
-    position: 'absolute',
     height: 40,
     width: '40%',
     borderRadius: 15,
     backgroundColor: "#9B9AFF",
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  flatListContentContainer: {
+    alignItems: 'center', // 중앙 정렬
     justifyContent: 'center',
   },
   textInput: {
@@ -341,6 +352,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     width: '65%',
     padding: 6,
+  },
+  topicButton: {
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 10,
+    backgroundColor: '#DDDDDD',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  selectedTopicButton: {
+    backgroundColor: '#A2A2A2',
+  },
+  topicButtonText: {
+    fontSize: 18,
+    color: '#000000',
+    fontWeight: 'bold',
   },
 });
 

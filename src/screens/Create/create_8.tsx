@@ -44,7 +44,7 @@ const Create_8 = ({ route }) => {
   //입력한 컨셉과 선택한 컨셉 상태 변수
   const [title, setTitle] = useState('');
   const [recommendedTitle, setRecommendedTitle] = useState('추천 받은 제목');
-  const [isTextSelected, setIsTextSelected] = useState(false); // 상태 변수 추가
+  const [isTitleSelected, setIsTitleSelected] = useState(false); // 상태 변수 추가
 
   // 최초 화면 상태 변수
   const [buttonText, setButtonText] = useState("제목을 추천받고 싶어요");
@@ -151,7 +151,7 @@ const Create_8 = ({ route }) => {
 
       // 선택된 제목 저장
       try {
-        if (isTextSelected) {
+        if (isTitleSelected) {
           await AsyncStorage.setItem(`novelTitle_${novelId}`, recommendedTitle); // id와 함께 저장
           setIsModalVisible1(false);
           navigation.navigate('Create_9', { novelId }); // id 전달
@@ -168,8 +168,8 @@ const Create_8 = ({ route }) => {
     setIsModalVisible2(false);
   };
 
-  const handleTextPress = () => {
-    setIsTextSelected((prev) => !prev); // 토글 기능
+  const handleTitlePress = () => {
+    setIsTitleSelected((prev) => !prev); // 토글 기능
   };
 
   return (
@@ -197,11 +197,9 @@ const Create_8 = ({ route }) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <Pressable onPress={handleTextPress}>
-              <Text style={[styles.modalTextStyle, { color: isTextSelected ? '#A2A2A2' : '#000000' }]}>
-                {recommendedTitle}
-              </Text>
-            </Pressable>
+            <TouchableOpacity style={[styles.titleButton, { backgroundColor: isTitleSelected ? '#A2A2A2' : '#E0E0E0' }]} onPress={handleTitlePress}>
+              <Text style={styles.titleButtonText}>{recommendedTitle}</Text>
+            </TouchableOpacity>
             {/* 세번째 버튼 (추천 내용 확정) */}
             <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
               <Text style={styles.buttonText}>확정</Text>
@@ -344,6 +342,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     width: '65%',
     padding: 6,
+  },
+  titleButton: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 40,
+  },
+  titleButtonText: {
+    fontSize: 18,
+    color: '#000000',
+    fontWeight: 'bold',
   },
 });
 

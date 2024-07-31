@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // AI로부터 추천받은 이미지를 가져오는 비동기 함수
-const fetchAICoverImage = async (concept: string, topic: string, background: string, character: string, plot: string, novel: string) => {
+const fetchAICoverImage = async (concept: string, topic: string, character: string, plot: string, novel: string, title: string) => {
   try {
     // AI 추천 이미지를 가져오는 API 호출
     // 여기서는 예시로 기존에 있던 이미지 URL을 사용
@@ -40,7 +40,6 @@ const Create_9 = ({ route }) => {
   // 저장된 데이터 변수
   const [savedConcept, setSavedConcept] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
-  const [savedBackground, setSavedBackground] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
   const [savedNovel, setSavedNovel] = useState('');
@@ -52,7 +51,6 @@ const Create_9 = ({ route }) => {
         // 앞에서 저장된 데이터 호출
         const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
-        const background = await AsyncStorage.getItem(`novelBackground_${novelId}`)
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
         const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
@@ -68,12 +66,6 @@ const Create_9 = ({ route }) => {
           setSavedTopic(topic);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           //console.log('Saved Topic:', topic);
-        }
-
-        if (background !== null) {
-          setSavedBackground(background);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Background:', background);
         }
 
         if (character !== null) {
@@ -101,7 +93,7 @@ const Create_9 = ({ route }) => {
         }
 
         // 저장된 내용을 바탕으로 AI 추천 이미지를 가져와서 설정
-        const initialImageUri = await fetchAICoverImage(savedConcept, savedTopic, savedBackground, savedCharacter, savedPlot, savedNovel);
+        const initialImageUri = await fetchAICoverImage(savedConcept, savedTopic, savedCharacter, savedPlot, savedNovel, savedTitle);
         if (initialImageUri) {
           setCurrentImagePath(initialImageUri);
         } else {

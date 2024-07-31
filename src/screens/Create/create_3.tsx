@@ -11,12 +11,12 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 컨셉을 가져오기
-const fetchRecommendedConcept = async () => {
+const fetchRecommendedConcepts = async () => {
   // AI 또는 서버에서 추천받은 컨셉을 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve('새로운 AI 추천 컨셉');
+      resolve(['AI 추천 컨셉 1', 'AI 추천 컨셉 2', 'AI 추천 컨셉 3', 'AI 추천 컨셉 4', 'AI 추천 컨셉 5']);
     }, 1000); // 1초 후에 컨셉 반환
   });
 };
@@ -41,8 +41,8 @@ const Create_3 = () => {
 
   //입력한 컨셉과 선택한 컨셉 상태 변수
   const [concept, setConcept] = useState('');
-  const [recommendedConcept, setRecommendedConcept] = useState('추천 받은 컨셉');
-  const [isTextSelected, setIsTextSelected] = useState(false); // 상태 변수 추가
+  const [recommendedConcepts, setRecommendedConcepts] = useState([]);
+  const [selectedConcepts, setSelectedConcepts] = useState([]);
 
   // 최초 화면 상태 변수
   const [buttonText, setButtonText] = useState("컨셉을 추천받고 싶어요");
@@ -92,7 +92,7 @@ const Create_3 = () => {
   //고유 id 확인용 코드
   useEffect(() => {
     if (novelId) {
-      console.log('Saved NovelId:', novelId);
+      //console.log('Saved NovelId:', novelId);
     }
   }, [novelId]);
 
@@ -104,11 +104,11 @@ const Create_3 = () => {
 
       // AI로부터 추천 받은 컨셉을 가져옴
       try {
-        const newRecommendedConcept = await fetchRecommendedConcept();
-        setRecommendedConcept(newRecommendedConcept);
+        const newRecommendedConcepts = await fetchRecommendedConcepts();
+        setRecommendedConcepts(newRecommendedConcepts);
         setIsModalVisible1(true);
       } catch (error) {
-        console.error('Failed to fetch recommended concept.', error);
+        console.error('Failed to fetch recommended concepts.', error);
       }
     }, 50); // 버튼 색상 복구
   };
@@ -149,12 +149,12 @@ const Create_3 = () => {
 
       // 선택된 컨셉 저장
       try {
-        if (isTextSelected) {
-          await AsyncStorage.setItem(`novelConcept_${novelId}`, recommendedConcept); // id와 함께 저장
+        if (selectedConcepts.length > 0) {
+          await AsyncStorage.setItem(`novelConcept_${novelId}`, JSON.stringify(selectedConcepts)); // id와 함께 저장
           setIsModalVisible1(false);
           navigation.navigate('Create_4', { novelId }); // id 전달
         } else {
-          Alert.alert('경고','컨셉을 선택해주세요.');
+          Alert.alert('경고','컨셉을 최소 하나 이상 선택해주세요.');
         }
       } catch (e) {
         console.error('Failed to save concept.', e);
@@ -166,8 +166,16 @@ const Create_3 = () => {
     setIsModalVisible2(false);
   };
 
-  const handleTextPress = () => {
-    setIsTextSelected((prev) => !prev); // 토글 기능
+  const handleConceptSelect = (concept) => {
+    setSelectedConcepts((prevSelected) => {
+      if (prevSelected.includes(concept)) {
+        return prevSelected.filter((item) => item !== concept);
+      } else if (prevSelected.length < 3) {
+        return [...prevSelected, concept];
+      } else {
+        return prevSelected;
+      }
+    });
   };
 
   return (
@@ -195,15 +203,26 @@ const Create_3 = () => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <Pressable onPress={handleTextPress}>
-              <Text style={[styles.modalTextStyle, { color: isTextSelected ? '#A2A2A2' : '#000000' }]}>
-                {recommendedConcept}
-              </Text>
-            </Pressable>
+            <View style={styles.conceptContainer}>
+            {recommendedConcepts.map((concept, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.conceptButton,
+                  selectedConcepts.includes(concept) && styles.selectedConceptButton,
+                ]}
+                onPress={() => handleConceptSelect(concept)}
+              >
+                <Text style={styles.conceptButtonText}>{concept}</Text>
+              </TouchableOpacity>
+            ))}
+            </View>
             {/* 세번째 버튼 (추천 내용 확정) */}
+            <View style={styles.buttonContainer}>
             <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
               <Text style={styles.buttonText}>확정</Text>
             </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -282,10 +301,9 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 35,
+    padding: 25,
     alignItems: 'center',
   },
   modalView2: {
@@ -312,6 +330,7 @@ const styles = StyleSheet.create({
     top: 5,
     right: 5,
     padding: 5,
+    zIndex: 1,
   },
   saveButton: {
     position: 'absolute',
@@ -323,9 +342,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  buttonContainer: {
+    alignItems: 'center', // 중앙 정렬
+    justifyContent: 'center',
+    width: '100%',
+  },
   okayButton: {
-    bottom: 20,
-    position: 'absolute',
     height: 40,
     width: '40%',
     borderRadius: 15,
@@ -342,6 +364,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5,
     width: '65%',
     padding: 6,
+  },
+  conceptContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  conceptButton: {
+    margin: 5,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  selectedConceptButton: {
+    backgroundColor: '#A2A2A2',
+  },
+  conceptButtonText: {
+    color: '#000000',
+    fontSize: 16,
   },
 });
 

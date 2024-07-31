@@ -1,7 +1,7 @@
 // src/screens/Create/create_5.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -11,12 +11,37 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 등장인물을 가져오기
-const fetchRecommendedCharacter = async (concept: string, topic: string) => {
+const fetchRecommendedCharacters = async (concept: string, topic: string) => {
   // AI 또는 서버에서 추천받은 등장인물을 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve('새로운 AI 추천 등장인물');
+      resolve([
+        {
+          role: '주연(주인공)',
+          name: 'AI 추천 주연',
+          age: '25',
+          gender: '남자',
+          occupation: '전사',
+          characteristics: '용감하고, 진지하며, 정의감이 강하다.'
+        },
+        {
+          role: '주연(상대역)',
+          name: 'AI 추천 주연(상대역)',
+          age: '24',
+          gender: '여자',
+          occupation: '마법사',
+          characteristics: '지혜롭고, 신비로운 성격을 가지며, 전투에서 강하다.'
+        },
+        {
+          role: '조연',
+          name: 'AI 추천 조연',
+          age: '30',
+          gender: '남자',
+          occupation: '상인',
+          characteristics: '재치있고, 교활하며, 사업적 감각이 뛰어나다.'
+        }
+      ]);
     }, 1000); // 1초 후에 등장인물 반환
   });
 };
@@ -38,7 +63,7 @@ const Create_5 = ({ route }) => {
 
   //입력한 등장인물과 선택한 등장인물 상태 변수
   const [character, setCharacter] = useState('');
-  const [recommendedCharacter, setRecommendedCharacter] = useState('추천 받은 등장인물');
+  const [recommendedCharacters, setRecommendedCharacters] = useState([]);
 
   // 최초 화면 상태 변수
   const [buttonText, setButtonText] = useState("등장인물을 추천받고 싶어요");
@@ -102,8 +127,8 @@ const Create_5 = ({ route }) => {
 
       // 저장된 데이터를 사용하여 AI로부터 추천 받은 등장인물을 가져옴
       try {
-        const newRecommendedCharacter = await fetchRecommendedCharacter(savedConcept, savedTopic);
-        setRecommendedCharacter(newRecommendedCharacter);
+        const newRecommendedCharacters = await fetchRecommendedCharacters(savedConcept, savedTopic);
+        setRecommendedCharacters(newRecommendedCharacters);
         setIsModalVisible1(true);
       } catch (error) {
         console.error('Failed to fetch recommended character.', error);
@@ -130,14 +155,7 @@ const Create_5 = ({ route }) => {
   }
 
   const onPressModalClose2 = async () => {
-    //입력한 등장인물 저장
-    try {
-      await AsyncStorage.setItem(`novelCharacter_${novelId}`, character);
-      setIsModalVisible2(false);
-      navigation.navigate('Create_6', { novelId });
-    } catch (e) {
-      console.error('Failed to save character.', e);
-    }
+    setIsModalVisible2(false);
   }
 
   const onPressOkayButton = async () => {
@@ -145,11 +163,35 @@ const Create_5 = ({ route }) => {
     setTimeout(async () => {
       setOkayButtonColor("#9B9AFF");
 
-      //선택한 등장인물 저장
+      // 선택한 등장인물 저장
       try {
-        await AsyncStorage.setItem(`novelCharacter_${novelId}`, recommendedCharacter); //id와 함께 저장
-        setIsModalVisible1(false);
-        navigation.navigate('Create_6', { novelId }); //id 전달
+        if (recommendedCharacters.length > 0) {
+          await AsyncStorage.setItem(`novelCharacter_${novelId}`, JSON.stringify(recommendedCharacters)); // id와 함께 저장
+          setIsModalVisible1(false);
+          navigation.navigate('Create_6', { novelId }); // id 전달
+        } else {
+          Alert.alert('경고', '추천받은 등장인물이 없습니다.');
+        }
+      } catch (e) {
+        console.error('Failed to save character.', e);
+      }
+    }, 50); // 버튼 색상 복구
+  }
+
+  const onPressSaveEditButton = async () => {
+    setOkayButtonColor("#000000");
+    setTimeout(async () => {
+      setOkayButtonColor("#9B9AFF");
+
+      // 선택한 등장인물 저장
+      try {
+        if (recommendedCharacters.length > 0) {
+          await AsyncStorage.setItem(`novelCharacter_${novelId}`, JSON.stringify(recommendedCharacters)); // id와 함께 저장
+          setIsModalVisible2(false);
+          navigation.navigate('Create_6', { novelId }); // id 전달
+        } else {
+          Alert.alert('경고', '추천받은 등장인물이 없습니다.');
+        }
       } catch (e) {
         console.error('Failed to save character.', e);
       }
@@ -158,6 +200,24 @@ const Create_5 = ({ route }) => {
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);
+  };
+
+  const handleCharacterChange = (index: number, field: string, value: string) => {
+    const updatedCharacters = [...recommendedCharacters];
+    updatedCharacters[index] = { ...updatedCharacters[index], [field]: value };
+    setRecommendedCharacters(updatedCharacters);
+  };
+
+  const handleAddCharacter = () => {
+    const newCharacter = {
+      role: '',
+      name: '',
+      age: '',
+      gender: '',
+      occupation: '',
+      characteristics: '',
+    };
+    setRecommendedCharacters([...recommendedCharacters, newCharacter]);
   };
 
   return (
@@ -185,7 +245,18 @@ const Create_5 = ({ route }) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
-            <Text style={styles.modalTextStyle}>{recommendedCharacter}</Text>
+            <ScrollView style={styles.characterContainer}>
+              {recommendedCharacters.map((character, index) => (
+                <View key={index} style={styles.characterItem}>
+                  <Text style={styles.characterRole}>{character.role}</Text>
+                  <Text style={styles.characterLabel}>이름: {character.name}</Text>
+                  <Text style={styles.characterLabel}>나이: {character.age}</Text>
+                  <Text style={styles.characterLabel}>성별: {character.gender}</Text>
+                  <Text style={styles.characterLabel}>직업: {character.occupation}</Text>
+                  <Text style={styles.characterLabel}>특징: {character.characteristics}</Text>
+                </View>
+              ))}
+            </ScrollView>
             <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
               <Text style={styles.buttonText}>확정</Text>
             </TouchableOpacity>
@@ -195,15 +266,71 @@ const Create_5 = ({ route }) => {
 
       {/* 두번째 모달 */}
       <Modal animationType="slide" visible={isModalVisible2} transparent={true}>
-        <View style={styles.modalBackground2}>
-          <View style={styles.modalView2}>
-            <Pressable style={styles.backButton} onPress={onPressBackButton}>
-              <Image source={backButtonImage} />
+        <View style={styles.modalBackground1}>
+          <View style={styles.modalView}>
+            <Pressable style={styles.closeButton} onPress={onPressModalClose2}>
+              <Image source={closeImage} />
             </Pressable>
-            <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
-              <Text style={styles.saveButtonText}>저장</Text>
-            </Pressable>
-            <TextInput style={styles.textInput} placeholder="등장인물을 직접 작성해주세요" placeholderTextColor="#FFFFFF"  maxLength={300} value={character} onChangeText={setCharacter}/>
+            <ScrollView style={styles.characterContainer}>
+              {recommendedCharacters.map((character, index) => (
+                <View key={index} style={styles.characterContainer}>
+                  <TextInput
+                    style={styles.characterRole}
+                    placeholder="역할"
+                    value={character.role}
+                    onChangeText={(text) => handleCharacterChange(index, 'role', text)}
+                  />
+                  <Text style={styles.inputLabel}>이름 : </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={character.name}
+                    onChangeText={(text) => handleCharacterChange(index, 'name', text)}
+                    placeholder="이름"
+                    maxLength={20}
+                  />
+                  <Text style={styles.inputLabel}>나이 : </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={character.age}
+                    onChangeText={(text) => handleCharacterChange(index, 'age', text)}
+                    placeholder="나이"
+                    keyboardType="numeric"
+                    maxLength={3} // 숫자 길이 제한
+                  />
+                  <Text style={styles.inputLabel}>성별 : </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={character.gender}
+                    onChangeText={(text) => handleCharacterChange(index, 'gender', text)}
+                    placeholder="성별"
+                    maxLength={10}
+                  />
+                  <Text style={styles.inputLabel}>직업 : </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={character.occupation}
+                    onChangeText={(text) => handleCharacterChange(index, 'occupation', text)}
+                    placeholder="직업"
+                    maxLength={20}
+                  />
+                  <Text style={styles.inputLabel}>특징 : </Text>
+                  <TextInput
+                    style={[styles.textInput, styles.multilineInput]}
+                    value={character.characteristics}
+                    onChangeText={(text) => handleCharacterChange(index, 'characteristics', text)}
+                    placeholder="특징"
+                    multiline={true}
+                    maxLength={300}
+                  />
+                </View>
+              ))}
+              <TouchableOpacity onPress={handleAddCharacter}>
+                <Text style={styles.addButton}>+ 등장인물 추가</Text>
+              </TouchableOpacity>
+            </ScrollView>
+            <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressSaveEditButton}>
+              <Text style={styles.buttonText}>수정 완료</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -267,7 +394,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: 250,
+    height: 500,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 35,
@@ -298,6 +425,7 @@ const styles = StyleSheet.create({
     top: 5,
     right: 5,
     padding: 5,
+    zIndex: 1,
   },
   saveButton: {
     position: 'absolute',
@@ -320,14 +448,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textInput: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 18,
+    borderColor: '#A2A2A2',
+    borderBottomWidth: 1,
+    padding: 5,
+  },
+  inputLabel: {
+    fontSize: 18,
+    color: '#000000',
+  },
+  characterContainer: {
+    marginBottom: 30,
+  },
+  characterItem: {
+    marginBottom: 15,
+  },
+  characterRole: {
     fontWeight: 'bold',
-    textAlign: 'center',
-    borderColor: '#FFFFFF',
-    borderBottomWidth: 5,
-    width: '65%',
-    padding: 6,
+    fontSize: 20,
+    color: '#000000',
+    marginTop: 5,
+  },
+  characterLabel: {
+    fontSize: 18,
+    color: '#000000',
+    margin: 5,
+  },
+  addButton: {
+    fontSize: 18,
+    color: '#9B9AFF',
+    marginBottom: 10,
   },
 });
 

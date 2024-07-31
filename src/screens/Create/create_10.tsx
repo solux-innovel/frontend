@@ -16,7 +16,6 @@ const Create_10 = ({ route }) => {
   // 저장된 데이터 변수
   const [savedConcept, setSavedConcept] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
-  const [savedBackground, setSavedBackground] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
   const [savedNovel, setSavedNovel] = useState('');
@@ -52,7 +51,6 @@ const Create_10 = ({ route }) => {
         // 앞에서 저장된 데이터 호출
         const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
-        const background = await AsyncStorage.getItem(`novelBackground_${novelId}`)
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
         const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
@@ -69,12 +67,6 @@ const Create_10 = ({ route }) => {
           setSavedTopic(topic);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           //console.log('Saved Topic:', topic);
-        }
-
-        if (background !== null) {
-          setSavedBackground(background);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Background:', background);
         }
 
         if (character !== null) {
@@ -125,7 +117,6 @@ const Create_10 = ({ route }) => {
         id: novelId,
         concept: savedConcept,
         topic: savedTopic,
-        background: savedBackground,
         character: savedCharacter,
         plot: savedPlot,
         novel: savedNovel,
