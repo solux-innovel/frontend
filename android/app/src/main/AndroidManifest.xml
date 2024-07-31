@@ -28,7 +28,7 @@
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" android:host="89c1-115-143-35-238.ngrok-free.app" android:path="/auth/innovel" />
+            <data android:scheme="https" android:host="c285-115-143-35-238.ngrok-free.app" android:path="/auth/innovel" />
 
 
         </intent-filter>

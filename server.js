@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // 네이버 로그인 엔드포인트
-app.post('/naver-login', (req, res) => {
+app.post('/api/users/login', (req, res) => {
   const { id, nickname, email } = req.body; // nickname 추가
 
   // 사용자 프로필 데이터를 처리합니다.
