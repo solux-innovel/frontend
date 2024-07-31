@@ -34,8 +34,31 @@ const LoginScreen: React.FC = () => {
       console.log('nickname:', nickname);
       console.log('email:', email);
 
-      login(); // 로그인 상태 업데이트
-      navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
+      // 백엔드 서버에 사용자 정보 전송
+      const response = await fetch(
+        'http://10.0.2.2:8080/api/users/kakao-login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: id,
+            name: nickname,
+            email: email,
+            mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
+          }),
+        },
+      );
+
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log('Server response:', responseData);
+        login(); // 로그인 상태 업데이트
+        navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
+      } else {
+        console.error('Server error:', responseData);
+      }
     } catch (err) {
       console.error('Kakao login failed:', err);
     }
@@ -54,12 +77,12 @@ const LoginScreen: React.FC = () => {
   const getKakaoProfile = async () => {
     try {
       const result = await getProfile();
-      console.log('getProfile result:', result); // 전체 응답을 출력하여 확인
+      console.log('getProfile result:', result);
 
       return {
-        nickname: result.nickname || 'Unnamed', // 올바른 프로퍼티 접근
-        email: result.email || 'No Email', // 올바른 프로퍼티 접근
-        id: result.id || 'No ID', // 올바른 프로퍼티 접근
+        nickname: result.nickname || 'Unnamed',
+        email: result.email || 'No Email',
+        id: result.id || 'No ID',
       };
     } catch (error) {
       console.error('Failed to get Kakao profile:', error);
