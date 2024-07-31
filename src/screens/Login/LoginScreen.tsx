@@ -1,10 +1,8 @@
-// src/screens/LoginScreen.tsx
-
 import React, {useContext} from 'react';
 import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
-import {AuthContext} from '../../navigation/AppNavigator'; // 로그인 상태를 가져올 Context
+import {AuthContext} from '../../navigation/AppNavigator';
 import {login as kakaoLogin, getProfile} from '@react-native-seoul/kakao-login';
 
 type RootStackParamList = {
@@ -20,52 +18,71 @@ const LoginScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const {login} = useContext(AuthContext);
 
-  const handleLogin = async (platform: string) => {
+  const handleKakaoLogin = async () => {
     try {
-      if (platform === 'Kakao') {
-        // 카카오 로그인 수행
-        const result = await kakaoLogin();
-        console.log('카카오 로그인 성공:', result);
+      const token = await signInWithKakao();
+      console.log('Kakao login success:', token);
 
-        // 카카오 사용자 프로필 정보 가져오기
-        const profile = await getProfile();
-        console.log('카카오 사용자 정보:', profile);
+      const profile = await getKakaoProfile();
+      console.log('Kakao profile:', profile);
 
-        // 사용자 정보 출력
-        const nickname = profile?.properties?.nickname || 'Unnamed';
-        const email = profile?.kakao_account?.email || 'No Email';
+      const id = profile.id || 'No ID';
+      const nickname = profile.nickname || 'Unnamed';
+      const email = profile.email || 'No Email';
 
-        console.log('닉네임:', nickname);
-        console.log('이메일:', email);
+      console.log('ID:', id);
+      console.log('닉네임:', nickname);
+      console.log('이메일:', email);
 
-        // 로그인 성공 후 필요한 처리 추가
-        login(); // 로그인 상태 업데이트
-        navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
-      } else {
-        console.log(`${platform} 로그인 버튼 클릭됨`);
-        // 다른 플랫폼 로그인 처리 (예: 네이버)
-      }
+      login(); // 로그인 상태 업데이트
+      navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
     } catch (err) {
-      console.error(`${platform} 로그인 실패:`, err);
+      console.error('Kakao login failed:', err);
+    }
+  };
+
+  const signInWithKakao = async () => {
+    return await kakaoLogin()
+      .then(result => {
+        return result;
+      })
+      .catch(error => {
+        throw error;
+      });
+  };
+
+  const getKakaoProfile = async () => {
+    try {
+      const result = await getProfile();
+      console.log('getProfile result:', result); // 전체 응답을 출력하여 확인
+
+      return {
+        nickname: result.nickname || 'Unnamed', // 올바른 프로퍼티 접근
+        email: result.email || 'No Email', // 올바른 프로퍼티 접근
+        id: result.id || 'No ID', // 올바른 프로퍼티 접근
+      };
+    } catch (error) {
+      console.error('Failed to get Kakao profile:', error);
+      return {
+        nickname: 'Unnamed',
+        email: 'No Email',
+        id: 'No ID',
+      };
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* 로고 이미지 */}
       <Image source={require('../../img/mainlogo.png')} style={styles.logo} />
 
-      {/* 카카오와 네이버 로그인 버튼 */}
-      <TouchableOpacity
-        onPress={() => handleLogin('Kakao')}
-        style={styles.button}>
+      <TouchableOpacity onPress={handleKakaoLogin} style={styles.button}>
         <Image
           source={require('../../img/kakaobutton.png')}
           style={styles.buttonImage}
         />
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => handleLogin('Naver')}
+        onPress={() => console.log('Naver login clicked')}
         style={styles.button}>
         <Image
           source={require('../../img/naverbutton.png')}
@@ -73,7 +90,6 @@ const LoginScreen: React.FC = () => {
         />
       </TouchableOpacity>
 
-      {/* 아이디 찾기, 비밀번호 찾기, 회원가입 버튼을 한 줄로 배치 */}
       <View style={styles.textContainer}>
         <TouchableOpacity onPress={() => navigation.navigate('FindID')}>
           <Text style={styles.text}>아이디 찾기</Text>
