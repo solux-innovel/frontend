@@ -1,7 +1,5 @@
 // src/screens/LoginScreen.tsx
-//0723 추가함
 
-// LoginScreen.tsx
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from 'axios';
 import { AuthContext } from '../../navigation/AppNavigator';
 import NaverLogin, { NaverLoginResponse, GetProfileResponse } from '@react-native-seoul/naver-login';
+import { login as kakaoLogin, getProfile as getKakaoProfile } from '@react-native-seoul/kakao-login';
 
 const androidKeys = {
   consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
@@ -35,6 +34,52 @@ const LoginScreen: React.FC = () => {
   useEffect(() => {
     NaverLogin.initialize(initials);
   }, []);
+
+  const handleKakaoLogin = async () => {
+    try {
+      const token = await kakaoLogin();
+      console.log('Kakao login success:', token);
+
+      const profile = await getKakaoProfile();
+      console.log('Kakao profile:', profile);
+
+      const id = profile.id || 'No ID';
+      const nickname = profile.nickname || 'Unnamed';
+      const email = profile.email || 'No Email';
+
+      console.log('id:', id);
+      console.log('nickname:', nickname);
+      console.log('email:', email);
+
+      // 백엔드 서버에 사용자 정보 전송
+      const response = await fetch(
+        'http://10.0.2.2:8080/api/users/kakao-login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: id,
+            name: nickname,
+            email: email,
+            mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
+          }),
+        },
+      );
+
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log('Server response:', responseData);
+        login(); // 로그인 상태 업데이트
+        navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
+      } else {
+        console.error('Server error:', responseData);
+      }
+    } catch (err) {
+      console.error('Kakao login failed:', err);
+    }
+  };
 
   const handleNaverLogin = async () => {
     try {
@@ -76,20 +121,11 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await NaverLogin.logout();
-      Alert.alert('로그아웃 성공', '로그아웃이 완료되었습니다.');
-      navigation.replace('LoginScreen');
-    } catch (err) {
-      console.error(err);
-      Alert.alert('로그아웃 실패', '로그아웃 중 오류가 발생했습니다.');
-    }
-  };
-
   const handleLogin = (platform: string) => {
     if (platform === 'Naver') {
       handleNaverLogin();
+    } else if (platform === 'Kakao') {
+      handleKakaoLogin();
     } else {
       console.log(`${platform} 로그인 버튼 클릭됨`);
       login();
