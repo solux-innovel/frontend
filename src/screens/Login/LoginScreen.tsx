@@ -1,6 +1,6 @@
 // src/screens/LoginScreen.tsx
 
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import axios from 'axios';
 import {AuthContext} from '../../navigation/AppNavigator';
 import NaverLogin, {
   NaverLoginResponse,
@@ -35,7 +36,6 @@ type RootStackParamList = {
   FindPassword: undefined;
   SignUp: undefined;
   LoginScreen: undefined;
-  Home: undefined; // Ensure Home is part of the stack
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -64,6 +64,7 @@ const LoginScreen: React.FC = () => {
       console.log('nickname:', nickname);
       console.log('email:', email);
 
+      // 백엔드 서버에 사용자 정보 전송
       const response = await fetch('https://your-domain-name/api/users/login', {
         method: 'POST',
         headers: {
@@ -81,7 +82,7 @@ const LoginScreen: React.FC = () => {
       if (response.ok) {
         console.log('Server response:', responseData);
         login(); // 로그인 상태 업데이트
-        navigation.replace('Home'); // 로그인 성공 후 홈 화면으로 이동
+        navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
       } else {
         console.error('Server error:', responseData);
       }
@@ -101,6 +102,7 @@ const LoginScreen: React.FC = () => {
         );
         console.log('사용자 프로필:', profile);
 
+        // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
         const response = await fetch(
           'https://your-domain-name/api/users/login',
           {
@@ -110,7 +112,7 @@ const LoginScreen: React.FC = () => {
             },
             body: JSON.stringify({
               id: profile.response.id,
-              nickname: profile.response.nickname,
+              nickname: profile.response.nickname, // nickname 추가
               email: profile.response.email,
             }),
           },
@@ -119,7 +121,7 @@ const LoginScreen: React.FC = () => {
         if (response.status === 200) {
           Alert.alert('로그인 성공', '백엔드로 사용자 프로필 전송 성공');
           login();
-          navigation.replace('Home'); // 로그인 성공 후 홈 화면으로 이동
+          navigation.replace('Main');
         } else {
           Alert.alert('로그인 실패', '백엔드로 사용자 프로필 전송 실패');
         }
@@ -145,7 +147,7 @@ const LoginScreen: React.FC = () => {
     } else {
       console.log(`${platform} 로그인 버튼 클릭됨`);
       login();
-      navigation.replace('Home'); // 로그인이 아닌 다른 버튼 클릭 시에도 홈 화면으로 이동
+      navigation.replace('Main');
     }
   };
 
@@ -171,11 +173,11 @@ const LoginScreen: React.FC = () => {
       </TouchableOpacity>
 
       <View style={styles.textContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity onPress={() => handleLogin('임시 로그인')}>
           <Text style={styles.text}>아이디 찾기</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <TouchableOpacity onPress={() => navigation.navigate('FindPassword')}>
           <Text style={styles.text}>비밀번호 찾기</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
