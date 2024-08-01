@@ -45,7 +45,7 @@ const LoginScreen: React.FC = () => {
         const profile: GetProfileResponse = await NaverLogin.getProfile(result.successResponse.accessToken);
         console.log("사용자 프로필:", profile);
 
-        // 사용자 프로필을 백엔드로 전송 
+        // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
         const response = await fetch('https://your-domain-name/api/users/login', {
           method: 'POST',
           headers: {
