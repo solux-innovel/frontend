@@ -1,26 +1,43 @@
-import React, {useContext} from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useNavigation} from '@react-navigation/native';
-import {AuthContext} from '../../navigation/AppNavigator';
-import {login as kakaoLogin, getProfile} from '@react-native-seoul/kakao-login';
+// src/screens/LoginScreen.tsx
+
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import axios from 'axios';
+import { AuthContext } from '../../navigation/AppNavigator';
+import NaverLogin, { NaverLoginResponse, GetProfileResponse } from '@react-native-seoul/naver-login';
+import { login as kakaoLogin, getProfile as getKakaoProfile } from '@react-native-seoul/kakao-login';
+
+const androidKeys = {
+  consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
+  consumerSecret: 'Xh0LFFTMgY',
+  appName: "innovel",
+};
+
+const initials = androidKeys;
 
 type RootStackParamList = {
   Main: undefined;
   FindID: undefined;
   FindPassword: undefined;
   SignUp: undefined;
+  LoginScreen: undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const {login} = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
+
+  useEffect(() => {
+    NaverLogin.initialize(initials);
+  }, []);
 
   const handleKakaoLogin = async () => {
     try {
-      const token = await signInWithKakao();
+      const token = await kakaoLogin();
       console.log('Kakao login success:', token);
 
       const profile = await getKakaoProfile();
@@ -64,33 +81,55 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  const signInWithKakao = async () => {
-    return await kakaoLogin()
-      .then(result => {
-        return result;
-      })
-      .catch(error => {
-        throw error;
-      });
+  const handleNaverLogin = async () => {
+    try {
+      const result: NaverLoginResponse | null = await NaverLogin.login();
+      console.log("네이버 로그인 결과:", result);
+
+      if (result && result.isSuccess && result.successResponse) {
+        const profile: GetProfileResponse = await NaverLogin.getProfile(result.successResponse.accessToken);
+        console.log("사용자 프로필:", profile);
+
+        // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
+        const response = await fetch('https://your-domain-name/api/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: profile.response.id,
+            nickname: profile.response.nickname, // nickname 추가
+            email: profile.response.email,
+          }),
+        });
+
+        if (response.status === 200) {
+          Alert.alert('로그인 성공', '백엔드로 사용자 프로필 전송 성공');
+          login();
+          navigation.replace('Main');
+        } else {
+          Alert.alert('로그인 실패', '백엔드로 사용자 프로필 전송 실패');
+        }
+      } else if (result && result.failureResponse) {
+        Alert.alert('로그인 실패', `실패 이유: ${result.failureResponse.message}`);
+      } else {
+        Alert.alert('로그인 실패', '인가 코드를 받지 못했습니다.');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('로그인 실패', '네이버 로그인 중 오류가 발생했습니다.');
+    }
   };
 
-  const getKakaoProfile = async () => {
-    try {
-      const result = await getProfile();
-      console.log('getProfile result:', result);
-
-      return {
-        nickname: result.nickname || 'Unnamed',
-        email: result.email || 'No Email',
-        id: result.id || 'No ID',
-      };
-    } catch (error) {
-      console.error('Failed to get Kakao profile:', error);
-      return {
-        nickname: 'Unnamed',
-        email: 'No Email',
-        id: 'No ID',
-      };
+  const handleLogin = (platform: string) => {
+    if (platform === 'Naver') {
+      handleNaverLogin();
+    } else if (platform === 'Kakao') {
+      handleKakaoLogin();
+    } else {
+      console.log(`${platform} 로그인 버튼 클릭됨`);
+      login();
+      navigation.replace('Main');
     }
   };
 
@@ -98,19 +137,11 @@ const LoginScreen: React.FC = () => {
     <View style={styles.container}>
       <Image source={require('../../img/mainlogo.png')} style={styles.logo} />
 
-      <TouchableOpacity onPress={handleKakaoLogin} style={styles.button}>
-        <Image
-          source={require('../../img/kakaobutton.png')}
-          style={styles.buttonImage}
-        />
+      <TouchableOpacity onPress={() => handleLogin('Kakao')} style={styles.button}>
+        <Image source={require('../../img/kakaobutton.png')} style={styles.buttonImage} />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => console.log('Naver login clicked')}
-        style={styles.button}>
-        <Image
-          source={require('../../img/naverbutton.png')}
-          style={styles.buttonImage}
-        />
+      <TouchableOpacity onPress={() => handleLogin('Naver')} style={styles.button}>
+        <Image source={require('../../img/naverbutton.png')} style={styles.buttonImage} />
       </TouchableOpacity>
 
       <View style={styles.textContainer}>
