@@ -76,10 +76,10 @@ const AppNavigator = () => {
             // 로그인되지 않은 상태일 때
             <>
               <Stack.Screen
-                name="Login"
+                name="LoginScreen" // 로그인 화면의 이름이 'LoginScreen'으로 설정됨
                 component={LoginScreen}
                 options={{ headerShown: false }}
-            />
+              />
               <Stack.Screen name="FindID" component={FindIDScreen} />
               <Stack.Screen name="FindPassword" component={FindPasswordScreen} />
               <Stack.Screen name="SignUp" component={SignUpScreen} />

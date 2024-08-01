@@ -1,14 +1,32 @@
 // src/screens/MY/myscreen.tsx
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+// MyScreen.tsx 파일에서
+// MyScreen.tsx
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import NaverLogin from '@react-native-seoul/naver-login';
+import { AuthContext } from '../../navigation/AppNavigator'; // AuthContext 가져오기
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const profileImage = require('../../img/My/Profile.png');
 const faceImage = require('../../img/My/Face.png');
 const arrowIcon = require('../../img/My/Arrow.png');
 
-const MyScreen = ({ navigation }) => {
+type RootStackParamList = {
+  ProfileScreen: undefined;
+  MyNovel: undefined;
+  LoginScreen: undefined; // 수정된 이름
+  // 다른 화면도 여기에 추가할 수 있습니다.
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const MyScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const { logout } = useContext(AuthContext); // AuthContext에서 logout 함수 가져오기
+
   //사용자명 상태 변수
   const [userName, setUserName] = useState('눈송이');
 
@@ -25,6 +43,19 @@ const MyScreen = ({ navigation }) => {
     saveUserName();
   }, [userName]); // userName 상태가 변경될 때마다 실행
 
+  const handleLogout = async () => {
+    try {
+      // 네이버 로그아웃 처리
+      await NaverLogin.logout();
+      Alert.alert('로그아웃 성공', '로그아웃이 완료되었습니다.');
+      logout(); // AuthContext를 이용해 로그인 상태를 업데이트
+      navigation.navigate('LoginScreen'); // 로그인 화면으로 네비게이션
+    } catch (err) {
+      console.error(err);
+      Alert.alert('로그아웃 실패', '로그아웃 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
@@ -36,25 +67,24 @@ const MyScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* 회원정보 관리 */}
-      <View style={styles.separator} />
+      <View style={styles.separator}/>
       <Text style={styles.headerText}>회원정보 관리</Text>
       <Text style={styles.menuText}>회원정보 수정</Text>
       <Text style={styles.menuText}>비밀번호 수정</Text>
 
-      {/* 나의 창작 */}
-      <View style={styles.separator} />
+      <View style={styles.separator}/>
       <Text style={styles.headerText}>나의 창작</Text>
       <TouchableOpacity onPress={() => navigation.navigate('MyNovel')}>
         <Text style={styles.menuText}>내가 창작한 소설</Text>
       </TouchableOpacity>
 
-      {/* 고객센터 */}
-      <View style={styles.separator} />
+      <View style={styles.separator}/>
       <Text style={styles.headerText}>고객센터</Text>
       <Text style={styles.menuText}>운영정책</Text>
       <Text style={styles.menuText}>문의하기</Text>
-      <Text style={styles.menuText}>로그아웃</Text>
+      <TouchableOpacity onPress={handleLogout}>
+        <Text style={styles.menuText}>로그아웃</Text>
+      </TouchableOpacity>
       <Text style={styles.menuText}>회원탈퇴</Text>
     </View>
   );
@@ -121,7 +151,7 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     marginBottom: 16,
     color: '#000000',
-  }
+  },
 });
 
 export default MyScreen;
