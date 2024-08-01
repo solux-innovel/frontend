@@ -2,12 +2,13 @@
 
 // MyScreen.tsx 파일에서
 // MyScreen.tsx
-import React, { useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import NaverLogin from '@react-native-seoul/naver-login';
 import { AuthContext } from '../../navigation/AppNavigator'; // AuthContext 가져오기
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const profileImage = require('../../img/My/Profile.png');
 const faceImage = require('../../img/My/Face.png');
@@ -25,6 +26,22 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const MyScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { logout } = useContext(AuthContext); // AuthContext에서 logout 함수 가져오기
+
+  //사용자명 상태 변수
+  const [userName, setUserName] = useState('눈송이');
+
+  // 사용자명 저장하기
+  useEffect(() => {
+    const saveUserName = async () => {
+      try {
+        await AsyncStorage.setItem('userName', userName);
+      } catch (error) {
+        console.error('Failed to save the user name.', error);
+      }
+    };
+
+    saveUserName();
+  }, [userName]); // userName 상태가 변경될 때마다 실행
 
   const handleLogout = async () => {
     try {
@@ -44,7 +61,7 @@ const MyScreen: React.FC = () => {
       <View style={styles.profileContainer}>
         <Image source={profileImage} style={styles.profileImage} />
         <Image source={faceImage} style={styles.faceImage} />
-        <Text style={styles.nameText}>눈송이님</Text>
+        <Text style={styles.nameText}>{userName}님</Text>
         <TouchableOpacity style={styles.arrowContainer} onPress={() => navigation.navigate('ProfileScreen')}>
           <Image source={arrowIcon} style={styles.arrowIcon} />
         </TouchableOpacity>
@@ -78,6 +95,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
+    backgroundColor: '#FFFFFF',
   },
   profileContainer: {
     width: '100%',
