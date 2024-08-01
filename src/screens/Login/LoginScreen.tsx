@@ -46,7 +46,7 @@ const LoginScreen: React.FC = () => {
         console.log("사용자 프로필:", profile);
 
         // 사용자 프로필을 백엔드로 전송 
-        const response = await fetch('https://3698-115-143-35-238.ngrok-free.app/api/users/login', {
+        const response = await fetch('https://your-domain-name/api/users/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
