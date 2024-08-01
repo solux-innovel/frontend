@@ -1,18 +1,30 @@
 // src/screens/LoginScreen.tsx
 
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import axios from 'axios';
-import { AuthContext } from '../../navigation/AppNavigator';
-import NaverLogin, { NaverLoginResponse, GetProfileResponse } from '@react-native-seoul/naver-login';
-import { login as kakaoLogin, getProfile as getKakaoProfile } from '@react-native-seoul/kakao-login';
+import React, {useContext, useEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {AuthContext} from '../../navigation/AppNavigator';
+import NaverLogin, {
+  NaverLoginResponse,
+  GetProfileResponse,
+} from '@react-native-seoul/naver-login';
+import {
+  login as kakaoLogin,
+  getProfile as getKakaoProfile,
+} from '@react-native-seoul/kakao-login';
 
 const androidKeys = {
   consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
   consumerSecret: 'Xh0LFFTMgY',
-  appName: "innovel",
+  appName: 'innovel',
 };
 
 const initials = androidKeys;
@@ -23,13 +35,14 @@ type RootStackParamList = {
   FindPassword: undefined;
   SignUp: undefined;
   LoginScreen: undefined;
+  Home: undefined; // Ensure Home is part of the stack
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { login } = useContext(AuthContext);
+  const {login} = useContext(AuthContext);
 
   useEffect(() => {
     NaverLogin.initialize(initials);
@@ -51,28 +64,24 @@ const LoginScreen: React.FC = () => {
       console.log('nickname:', nickname);
       console.log('email:', email);
 
-      // 백엔드 서버에 사용자 정보 전송
-      const response = await fetch(
-        'http://10.0.2.2:8080/api/users/kakao-login',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: id,
-            name: nickname,
-            email: email,
-            mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
-          }),
+      const response = await fetch('https://your-domain-name/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          id: id,
+          name: nickname,
+          email: email,
+          mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
+        }),
+      });
 
       const responseData = await response.json();
       if (response.ok) {
         console.log('Server response:', responseData);
         login(); // 로그인 상태 업데이트
-        navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
+        navigation.replace('Home'); // 로그인 성공 후 홈 화면으로 이동
       } else {
         console.error('Server error:', responseData);
       }
@@ -84,34 +93,41 @@ const LoginScreen: React.FC = () => {
   const handleNaverLogin = async () => {
     try {
       const result: NaverLoginResponse | null = await NaverLogin.login();
-      console.log("네이버 로그인 결과:", result);
+      console.log('네이버 로그인 결과:', result);
 
       if (result && result.isSuccess && result.successResponse) {
-        const profile: GetProfileResponse = await NaverLogin.getProfile(result.successResponse.accessToken);
-        console.log("사용자 프로필:", profile);
+        const profile: GetProfileResponse = await NaverLogin.getProfile(
+          result.successResponse.accessToken,
+        );
+        console.log('사용자 프로필:', profile);
 
-        // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
-        const response = await fetch('https://your-domain-name/api/users/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          'https://your-domain-name/api/users/login',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: profile.response.id,
+              nickname: profile.response.nickname,
+              email: profile.response.email,
+            }),
           },
-          body: JSON.stringify({
-            id: profile.response.id,
-            nickname: profile.response.nickname, // nickname 추가
-            email: profile.response.email,
-          }),
-        });
+        );
 
         if (response.status === 200) {
           Alert.alert('로그인 성공', '백엔드로 사용자 프로필 전송 성공');
           login();
-          navigation.replace('Main');
+          navigation.replace('Home'); // 로그인 성공 후 홈 화면으로 이동
         } else {
           Alert.alert('로그인 실패', '백엔드로 사용자 프로필 전송 실패');
         }
       } else if (result && result.failureResponse) {
-        Alert.alert('로그인 실패', `실패 이유: ${result.failureResponse.message}`);
+        Alert.alert(
+          '로그인 실패',
+          `실패 이유: ${result.failureResponse.message}`,
+        );
       } else {
         Alert.alert('로그인 실패', '인가 코드를 받지 못했습니다.');
       }
@@ -129,7 +145,7 @@ const LoginScreen: React.FC = () => {
     } else {
       console.log(`${platform} 로그인 버튼 클릭됨`);
       login();
-      navigation.replace('Main');
+      navigation.replace('Home'); // 로그인이 아닌 다른 버튼 클릭 시에도 홈 화면으로 이동
     }
   };
 
@@ -137,19 +153,29 @@ const LoginScreen: React.FC = () => {
     <View style={styles.container}>
       <Image source={require('../../img/mainlogo.png')} style={styles.logo} />
 
-      <TouchableOpacity onPress={() => handleLogin('Kakao')} style={styles.button}>
-        <Image source={require('../../img/kakaobutton.png')} style={styles.buttonImage} />
+      <TouchableOpacity
+        onPress={() => handleLogin('Kakao')}
+        style={styles.button}>
+        <Image
+          source={require('../../img/kakaobutton.png')}
+          style={styles.buttonImage}
+        />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => handleLogin('Naver')} style={styles.button}>
-        <Image source={require('../../img/naverbutton.png')} style={styles.buttonImage} />
+      <TouchableOpacity
+        onPress={() => handleLogin('Naver')}
+        style={styles.button}>
+        <Image
+          source={require('../../img/naverbutton.png')}
+          style={styles.buttonImage}
+        />
       </TouchableOpacity>
 
       <View style={styles.textContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate('FindID')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
           <Text style={styles.text}>아이디 찾기</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('FindPassword')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
           <Text style={styles.text}>비밀번호 찾기</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
