@@ -1,101 +1,231 @@
 // src/screens/LoginScreen.tsx
-//0723 추가함
 
-import React, { useContext } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { AuthContext } from '../../navigation/AppNavigator'; // 로그인 상태를 가져올 Context
+import React, {useContext, useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import axios from 'axios';
+import {AuthContext} from '../../navigation/AppNavigator';
+import NaverLogin, {
+  NaverLoginResponse,
+  GetProfileResponse,
+} from '@react-native-seoul/naver-login';
+import {
+  login as kakaoLogin,
+  getProfile as getKakaoProfile,
+} from '@react-native-seoul/kakao-login';
 
+const androidKeys = {
+  consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
+  consumerSecret: 'Xh0LFFTMgY',
+  appName: 'innovel',
+};
+
+const initials = androidKeys;
 
 type RootStackParamList = {
-    Main: undefined;
-    FindID: undefined;
-    FindPassword: undefined;
-    SignUp: undefined;
+  Main: undefined;
+  FindID: undefined;
+  FindPassword: undefined;
+  SignUp: undefined;
+  LoginScreen: undefined;
 };
-  
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen: React.FC = () => {
-    const navigation = useNavigation<NavigationProp>();
-    const { login } = useContext(AuthContext);
+  const navigation = useNavigation<NavigationProp>();
+  const {login} = useContext(AuthContext);
 
-    const handleLogin = (platform: string) => {
-        // 플랫폼에 따라 로그인 처리 (카카오, 네이버 등)
-        console.log(`${platform} 로그인 버튼 클릭됨`);
+  useEffect(() => {
+    NaverLogin.initialize(initials);
+  }, []);
+
+  const handleKakaoLogin = async () => {
+    try {
+      const token = await kakaoLogin();
+      console.log('Kakao login success:', token);
+
+      const profile = await getKakaoProfile();
+      console.log('Kakao profile:', profile);
+
+      const id = profile.id || 'No ID';
+      const nickname = profile.nickname || 'Unnamed';
+      const email = profile.email || 'No Email';
+
+      console.log('id:', id);
+      console.log('nickname:', nickname);
+      console.log('email:', email);
+
+      // 백엔드 서버에 사용자 정보 전송
+      const response = await fetch('https://your-domain-name/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: id,
+          name: nickname,
+          email: email,
+          mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
+        }),
+      });
+
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log('Server response:', responseData);
         login(); // 로그인 상태 업데이트
         navigation.replace('Main'); // 로그인 성공 후 메인 화면으로 이동
-    };
+      } else {
+        console.error('Server error:', responseData);
+      }
+    } catch (err) {
+      console.error('Kakao login failed:', err);
+    }
+  };
 
-    return (
-        <View style={styles.container}>
-            {/* 로고 이미지 */}
-            <Image source={require('../../img/mainlogo.png')} style={styles.logo}/>
+  const handleNaverLogin = async () => {
+    try {
+      const result: NaverLoginResponse | null = await NaverLogin.login();
+      console.log('네이버 로그인 결과:', result);
 
-            {/* 카카오와 네이버 로그인 버튼 */}
-            <TouchableOpacity onPress={() => handleLogin('Kakao')} style={styles.button}>
-                <Image source={require('../../img/kakaobutton.png')} style={styles.buttonImage} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleLogin('Naver')} style={styles.button}>
-                <Image source={require('../../img/naverbutton.png')} style={styles.buttonImage} />
-            </TouchableOpacity>
+      if (result && result.isSuccess && result.successResponse) {
+        const profile: GetProfileResponse = await NaverLogin.getProfile(
+          result.successResponse.accessToken,
+        );
+        console.log('사용자 프로필:', profile);
 
-            {/* 아이디 찾기, 비밀번호 찾기, 회원가입 버튼을 한 줄로 배치 */}
-            <View style={styles.textContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('FindID')}>
-                    <Text style={styles.text}>아이디 찾기</Text>
-                </TouchableOpacity>
-                <Text style={styles.separator}>|</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('FindPassword')}>
-                    <Text style={styles.text}>비밀번호 찾기</Text>
-                </TouchableOpacity>
-                <Text style={styles.separator}>|</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                    <Text style={styles.text}>회원가입</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+        // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
+        const response = await fetch(
+          'https://your-domain-name/api/users/login',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: profile.response.id,
+              nickname: profile.response.nickname, // nickname 추가
+              email: profile.response.email,
+            }),
+          },
+        );
+
+        if (response.status === 200) {
+          Alert.alert('로그인 성공', '백엔드로 사용자 프로필 전송 성공');
+          login();
+          navigation.replace('Main');
+        } else {
+          Alert.alert('로그인 실패', '백엔드로 사용자 프로필 전송 실패');
+        }
+      } else if (result && result.failureResponse) {
+        Alert.alert(
+          '로그인 실패',
+          `실패 이유: ${result.failureResponse.message}`,
+        );
+      } else {
+        Alert.alert('로그인 실패', '인가 코드를 받지 못했습니다.');
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('로그인 실패', '네이버 로그인 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleLogin = (platform: string) => {
+    if (platform === 'Naver') {
+      handleNaverLogin();
+    } else if (platform === 'Kakao') {
+      handleKakaoLogin();
+    } else {
+      console.log(`${platform} 로그인 버튼 클릭됨`);
+      login();
+      navigation.replace('Main');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Image source={require('../../img/mainlogo.png')} style={styles.logo} />
+
+      <TouchableOpacity
+        onPress={() => handleLogin('Kakao')}
+        style={styles.button}>
+        <Image
+          source={require('../../img/kakaobutton.png')}
+          style={styles.buttonImage}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handleLogin('Naver')}
+        style={styles.button}>
+        <Image
+          source={require('../../img/naverbutton.png')}
+          style={styles.buttonImage}
+        />
+      </TouchableOpacity>
+
+      <View style={styles.textContainer}>
+        <TouchableOpacity onPress={() => handleLogin('임시 로그인')}>
+          <Text style={styles.text}>아이디 찾기</Text>
+        </TouchableOpacity>
+        <Text style={styles.separator}>|</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('FindPassword')}>
+          <Text style={styles.text}>비밀번호 찾기</Text>
+        </TouchableOpacity>
+        <Text style={styles.separator}>|</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+          <Text style={styles.text}>회원가입</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 0,//
-    },
-    logo: {
-        width: '95%', // 부모 컨테이너의 100%를 사용
-        height: undefined, // 높이를 자동으로 조정
-        aspectRatio: 1, // 비율에 맞춰서 조정
-        marginBottom: 100,
-    },
-    button: {
-        width: '95%', // 부모 컨테이너의 95%를 사용
-        height: 50, // 버튼의 높이를 명시적으로 설정
-        marginVertical: 10,
-    },
-    buttonImage: {
-        width: '100%', // 부모 컨테이너의 100%를 사용
-        height: '100%', // 부모 컨테이너의 100%를 사용
-    },
-    textContainer: {
-        flexDirection: 'row', // 버튼을 가로로 배치
-        marginTop: 30,
-        alignItems: 'center',
-    },
-    text: {
-        fontSize: 16,
-        color: '#000000',
-        marginHorizontal: 3, // 버튼 사이의 간격
-    },
-    separator: {
-        fontSize: 16,
-        color: '#000000',
-        marginHorizontal: 3, // 구분 기호와 버튼 사이의 간격
-    },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 0,
+  },
+  logo: {
+    width: '95%',
+    height: undefined,
+    aspectRatio: 1,
+    marginBottom: 100,
+  },
+  button: {
+    width: '95%',
+    height: 50,
+    marginVertical: 10,
+  },
+  buttonImage: {
+    width: '100%',
+    height: '100%',
+  },
+  textContainer: {
+    flexDirection: 'row',
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 16,
+    color: '#000000',
+    marginHorizontal: 3,
+  },
+  separator: {
+    fontSize: 16,
+    color: '#000000',
+    marginHorizontal: 3,
+  },
 });
 
 export default LoginScreen;
