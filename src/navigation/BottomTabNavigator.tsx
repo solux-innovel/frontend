@@ -40,6 +40,14 @@ const BottomTabNavigator = () => {
         },
         tabBarActiveTintColor: 'black',
         tabBarInactiveTintColor: 'gray',
+        headerTitle: () => (
+          <Image
+            source={require('C:/solux-innovel/frontend/src/img/logoTitle.png')}
+            style={{width: 150, height: 50}}
+            resizeMode="contain"
+          />
+        ),
+        headerTitleAlign: 'center',
       })}>
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Search" component={Search} />
