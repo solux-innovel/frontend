@@ -4,6 +4,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from '../screens/Home/homescreen';
 import Search from '../screens/Search/searchscreen';
 import My from '../screens/MY/myscreen';
+import Genre from '../src/screens/Novel/GenreScreen';
 import Create from '../screens/Create/create_1';
 
 const homeIcon = require('../img/home.png');
