@@ -4,13 +4,14 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from '../screens/Home/homescreen';
 import Search from '../screens/Search/searchscreen';
 import My from '../screens/MY/myscreen';
-import Genre from '../src/screens/Novel/GenreScreen';
 import Create from '../screens/Create/create_1';
+import Genre from '../src/screens/Novel/GenreScreen';
 
 const homeIcon = require('../img/home.png');
 const searchIcon = require('../img/search.png');
 const myIcon = require('../img/my.png');
 const createIcon = require('../img/create.png');
+const logoTitle = require('../img/logoTitle.png');
 
 const Tab = createBottomTabNavigator();
 
@@ -42,7 +43,7 @@ const BottomTabNavigator = () => {
         tabBarInactiveTintColor: 'gray',
         headerTitle: () => (
           <Image
-            source={require('C:/solux-innovel/frontend/src/img/logoTitle.png')}
+            source={logoTitle}
             style={{width: 150, height: 50}}
             resizeMode="contain"
           />
