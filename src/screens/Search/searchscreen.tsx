@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, FlatList, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  Image,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface SearchEntry {
@@ -30,7 +38,9 @@ const SearchScreen = () => {
   }, []);
 
   const handleSearch = async (query: string) => {
-    if (query.trim() === '') return;
+    if (query.trim() === '') {
+      return;
+    }
 
     const date = new Date();
     const searchEntry: SearchEntry = {
@@ -40,7 +50,9 @@ const SearchScreen = () => {
 
     try {
       const existingSearches = await AsyncStorage.getItem('recentSearches');
-      let searches: SearchEntry[] = existingSearches ? JSON.parse(existingSearches) : [];
+      let searches: SearchEntry[] = existingSearches
+        ? JSON.parse(existingSearches)
+        : [];
       searches.push(searchEntry);
 
       if (searches.length > 5) {
@@ -48,7 +60,8 @@ const SearchScreen = () => {
       }
 
       await AsyncStorage.setItem('recentSearches', JSON.stringify(searches));
-      setRecentSearches(searches);1
+      setRecentSearches(searches);
+      1;
     } catch (error) {
       console.error(error);
     }
@@ -74,7 +87,7 @@ const SearchScreen = () => {
           style={styles.searchInput}
           placeholder="소설 제목, 작가, 장르를 검색해주세요"
           value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
+          onChangeText={text => setSearchQuery(text)}
           onSubmitEditing={() => handleSearch(searchQuery)}
         />
       </View>
@@ -83,7 +96,7 @@ const SearchScreen = () => {
         <FlatList
           data={recentSearches}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <TouchableOpacity>
               <View style={styles.recentSearchItem}>
                 <Text>{item.query}</Text>
@@ -101,6 +114,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#fff',
   },
   searchContainer: {
     flexDirection: 'row',
