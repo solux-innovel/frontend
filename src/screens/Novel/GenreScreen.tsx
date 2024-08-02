@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react';
-import {View, Text, ScrollView, Image} from 'react-native';
+import {View, Text, ScrollView, Image, StyleSheet} from 'react-native';
 import {useRoute, useNavigation} from '@react-navigation/native';
-import styles from '../../styles/Novel/genreScreenStyles';
 
 const GenreScreen = () => {
   const route = useRoute();
@@ -9,12 +8,22 @@ const GenreScreen = () => {
   const {genre} = route.params;
 
   useEffect(() => {
+    // Set header options dynamically based on the genre
     navigation.setOptions({
-      title: genre,
+      title: genre, // This sets the title to the genre
       headerTitleAlign: 'center',
-      color: '#000000',
-      fontSize: 18,
-      fontWeight: 'bold',
+      headerTintColor: '#000000', // Text color
+      headerTitleStyle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+      },
+      headerStyle: {
+        backgroundColor: '#FFFFFF', // White background
+        elevation: 0, // Remove shadow on Android
+        shadowOpacity: 0, // Remove shadow on iOS
+        borderBottomWidth: 0, // Remove bottom border
+        borderBottomColor: 'transparent', // Ensure bottom border color is transparent
+      },
     });
   }, [navigation, genre]);
 
@@ -43,5 +52,50 @@ const GenreScreen = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 8,
+  },
+  banner: {
+    width: '100%',
+    height: 240,
+    alignItems: 'center',
+  },
+  bannerImage: {
+    width: '100%', // Use '100%' to fill the width of the parent
+    height: 230,
+    resizeMode: 'cover',
+    borderRadius: 0,
+  },
+  content: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: 10,
+  },
+  item: {
+    width: '23%', // Adjust width to fit 4 items per row with some spacing
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  thumbnail: {
+    width: 88,
+    height: 120,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  itemAuthor: {
+    fontSize: 14,
+    color: '#555',
+  },
+});
 
 export default GenreScreen;

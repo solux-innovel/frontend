@@ -3,7 +3,8 @@ import {StyleSheet} from 'react-native';
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    padding: 8,
   },
   banner: {
     width: '100%',
@@ -11,11 +12,11 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   bannerImage: {
-    width: 360,
-    height: 240,
+    width: 410,
+    height: 230,
     resizeMode: 'cover',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 0,
   },
   section: {
     marginVertical: 8,
@@ -62,10 +63,9 @@ export default StyleSheet.create({
   },
   contentThumbnail: {
     width: '100%',
-    height: '80%',
-    backgroundColor: '#e0e0e0',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 8,
   },
   arrowIcon: {
     width: 24,
