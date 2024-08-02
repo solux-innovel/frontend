@@ -2,6 +2,7 @@
 
 // MyScreen.tsx 파일에서
 // MyScreen.tsx
+// MyScreen.tsx
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -27,26 +28,40 @@ const MyScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { logout } = useContext(AuthContext); // AuthContext에서 logout 함수 가져오기
 
-  //사용자명 상태 변수
-  const [userName, setUserName] = useState('눈송이');
+  // 사용자명 상태 변수
+  const [userName, setUserName] = useState<string | null>(null);
 
-  // 사용자명 저장하기
+  // AsyncStorage에서 사용자명 불러오기
   useEffect(() => {
-    const saveUserName = async () => {
+    const loadUserName = async () => {
       try {
-        await AsyncStorage.setItem('userName', userName);
+        const storedUserName = await AsyncStorage.getItem('userNickname');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        } else {
+          setUserName('눈송이'); // 기본값 설정
+        }
       } catch (error) {
-        console.error('Failed to save the user name.', error);
+        console.error('Failed to load the user name.', error);
       }
     };
 
-    saveUserName();
-  }, [userName]); // userName 상태가 변경될 때마다 실행
+    loadUserName();
+  }, []); // 빈 배열을 넣으면 컴포넌트가 처음 렌더링될 때 한 번만 실행됩니다.
 
   const handleLogout = async () => {
     try {
       // 네이버 로그아웃 처리
       await NaverLogin.logout();
+
+      // 카카오 로그아웃 처리
+      await logout();
+
+      //로그아웃 되면 없어져야 됨
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('userNickname');
+      await AsyncStorage.removeItem('userEmail');
+      
       Alert.alert('로그아웃 성공', '로그아웃이 완료되었습니다.');
       logout(); // AuthContext를 이용해 로그인 상태를 업데이트
       navigation.navigate('LoginScreen'); // 로그인 화면으로 네비게이션

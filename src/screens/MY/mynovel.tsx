@@ -13,49 +13,84 @@ const MyNovel = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState('');
-  const [concept, setConcept] = useState('');
+  const [genre, setGenre] = useState('');
   const [novelContent, setNovelContent] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchNovels(); // 처음 로딩 시 소설 목록을 가져옵니다.
+    const fetchUserId = async () => {
+      try {
+        //유저 아이디
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+          fetchNovels(storedUserId);
+        }
+      } catch (error) {
+        console.error('Failed to load user ID.', error);
+      }
+    };
+
+    fetchUserId(); // 처음 로딩 시 userId를 가져오고 소설 목록을 가져옵니다.
   }, []);
 
-  const fetchNovels = async () => {
+  const fetchNovels = async (userId: string) => {
     try {
+      // 기존 AsyncStorage에서 소설 목록 가져오기
       const keys = await AsyncStorage.getAllKeys();
       const novelKeys = keys.filter(key => key.startsWith('novelData_'));
 
       const novelData = await Promise.all(novelKeys.map(async (key) => {
-      const data = await AsyncStorage.getItem(key);
-      const parsedData = JSON.parse(data);
+        const data = await AsyncStorage.getItem(key);
+        const parsedData = JSON.parse(data);
 
-      // concept 값이 JSON 문자열일 경우 배열로 변환
-      if (typeof parsedData.concept === 'string') {
-        try {
-          parsedData.concept = JSON.parse(parsedData.concept);
-        } catch (error) {
-          // JSON 파싱 실패 시 문자열 그대로 사용
-          parsedData.concept = parsedData.concept;
+        // genre 값이 JSON 문자열일 경우 배열로 변환
+        if (typeof parsedData.genre === 'string') {
+          try {
+            parsedData.genre = JSON.parse(parsedData.genre);
+          } catch (error) {
+            // JSON 파싱 실패 시 문자열 그대로 사용
+            parsedData.genre = parsedData.genre;
+          }
         }
-      }
 
-      return parsedData;
+        return parsedData;
       }));
 
       setNovels(novelData);
-      console.log('Fetched novels:', novelData);  // 상태 로그
+      console.log('Fetched novels:', novelData); // 상태 로그
+
+      // 백엔드로 userId 전송
+      await sendUserIdToBackend(userId);
     } catch (error) {
       console.error('Failed to load novels.', error);
     }
   };
 
+  const sendUserIdToBackend = async (userId: string) => {
+    try {//백엔드 엔드포인트 변경 필요
+      const response = await fetch('http://10.101.38.18:8080/api/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send user ID to backend');
+      }
+
+      console.log('User ID sent to backend successfully.');
+    } catch (error) {
+      console.error('Error sending user ID to backend:', error);
+    }
+  };
 
   const handlePress = (novel) => {
     setSelectedNovel(novel);
     setTitle(novel.title);
-    //setConcept(novel.concept);
-    // 배열을 문자열로 변환하여 설정
-    setConcept(Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept || '');
+    setGenre(Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre || '');
     setNovelContent(novel.novel);
     setModalVisible(true);
   };
@@ -68,10 +103,12 @@ const MyNovel = () => {
 
   const handleSave = async () => {
     try {
-      const updatedNovel = { ...selectedNovel, title, concept: concept.split(',').map(c => c.trim()), novel: novelContent };
+      const updatedNovel = { ...selectedNovel, title, genre: genre.split(',').map(c => c.trim()), novel: novelContent };
       await AsyncStorage.setItem(`novelData_${selectedNovel.id}`, JSON.stringify(updatedNovel));
       console.log('Saving novel and fetching novels again...');
-      await fetchNovels();
+      if (userId) {
+        await fetchNovels(userId); // userId를 사용하여 소설 목록을 다시 가져옵니다.
+      }
       closeModal();
     } catch (error) {
       console.error('Failed to save the novel.', error);
@@ -80,21 +117,22 @@ const MyNovel = () => {
 
   const handleDelete = async () => {
     try {
-    const novelKey = `novelData_${selectedNovel.id}`;
-    await AsyncStorage.removeItem(novelKey);
+      const novelKey = `novelData_${selectedNovel.id}`;
+      await AsyncStorage.removeItem(novelKey);
 
-    // 삭제 후 확인
-    const itemAfterDeletion = await AsyncStorage.getItem(novelKey);
-    if (itemAfterDeletion === null) {
-      console.log(`Novel with key ${novelKey} successfully deleted.`);
-    } else {
-      console.error(`Failed to delete novel with key ${novelKey}. Item still exists:`, itemAfterDeletion);
-    }
+      // 삭제 후 확인
+      const itemAfterDeletion = await AsyncStorage.getItem(novelKey);
+      if (itemAfterDeletion === null) {
+        console.log(`Novel with key ${novelKey} successfully deleted.`);
+      } else {
+        console.error(`Failed to delete novel with key ${novelKey}. Item still exists:`, itemAfterDeletion);
+      }
 
-    // 소설 목록을 다시 가져와서 상태를 업데이트합니다.
-    console.log('Deleting novel and fetching novels again...');
-    await fetchNovels();
-    closeModal();
+      console.log('Deleting novel and fetching novels again...');
+      if (userId) {
+        await fetchNovels(userId); // userId를 사용하여 소설 목록을 다시 가져옵니다.
+      }
+      closeModal();
     } catch (error) {
       console.error('Failed to delete the novel.', error);
     }
@@ -106,11 +144,11 @@ const MyNovel = () => {
         {novels.map((novel, index) => (
           <View key={novel.id || index} style={styles.novelContainer}>
             <TouchableOpacity onPress={() => handlePress(novel)}>
-              <Image source={novel.thumbnail ? { uri: novel.thumbnail } : thumbnailImage} style={styles.thumbnail}/>
+              <Image source={novel.thumbnail ? { uri: novel.thumbnail } : thumbnailImage} style={styles.thumbnail} />
             </TouchableOpacity>
             <View style={styles.textContainer}>
-              <Text style={styles.title} numberOfLines={1} ellipsizeMode='tail'>{novel.title}</Text>
-              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept}</Text>
+              <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{novel.title}</Text>
+              <Text style={styles.genre} numberOfLines={1} ellipsizeMode="tail">{Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre}</Text>
             </View>
           </View>
         ))}
@@ -154,9 +192,9 @@ const MyNovel = () => {
                     />
                     <TextInput
                       style={styles.input}
-                      value={concept}
-                      onChangeText={setConcept}
-                      placeholder="컨셉"
+                      value={genre}
+                      onChangeText={setGenre}
+                      placeholder="장르"
                     />
                     <TextInput
                       style={styles.input}
@@ -170,7 +208,7 @@ const MyNovel = () => {
                 ) : (
                   <View>
                     <Text style={styles.modalTitle}>{selectedNovel.title}</Text>
-                    <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.concept) ? selectedNovel.concept.join(', ') : selectedNovel.concept}</Text>
+                    <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.genre) ? selectedNovel.genre.join(', ') : selectedNovel.genre}</Text>
                     <View style={styles.modalTextContainer}>
                       <Text style={styles.modalText}>{selectedNovel.novel}</Text>
                     </View>
