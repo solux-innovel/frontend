@@ -74,7 +74,51 @@ const AppNavigator = () => {
                 component={Create_1}
                 options={{title: 'Create'}}
               />
-              {/* Add the rest of your Create screens here */}
+              <Stack.Screen
+                name="Create_2"
+                component={Create_2}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_3"
+                component={Create_3}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_4"
+                component={Create_4}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_5"
+                component={Create_5}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_6"
+                component={Create_6}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_7"
+                component={Create_7}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_8"
+                component={Create_8}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_9"
+                component={Create_9}
+                options={{title: 'Create'}}
+              />
+              <Stack.Screen
+                name="Create_10"
+                component={Create_10}
+                options={{title: 'Create'}}
+              />
             </>
           ) : (
             <>
