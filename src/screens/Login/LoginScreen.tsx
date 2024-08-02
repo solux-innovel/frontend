@@ -65,16 +65,15 @@ const LoginScreen: React.FC = () => {
       console.log('email:', email);
 
       // 백엔드 서버에 사용자 정보 전송
-      const response = await fetch('https://your-domain-name/api/users/login', {
+      const response = await fetch('http://10.101.38.18:8080/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           id: id,
-          name: nickname,
+          nickname: nickname,
           email: email,
-          mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
         }),
       });
 
@@ -104,7 +103,7 @@ const LoginScreen: React.FC = () => {
 
         // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
         const response = await fetch(
-          'https://your-domain-name/api/users/login',
+          'http://10.101.38.18:8080/api/users/login',
           {
             method: 'POST',
             headers: {
