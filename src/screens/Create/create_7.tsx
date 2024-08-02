@@ -11,7 +11,7 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 소설을 가져오기
-const fetchRecommendedNovel = async (concept: string, topic: string, character: string, plot: string) => {
+const fetchRecommendedNovel = async (idea: string, genre: string, topic: string, character: string, plot: string) => {
   // AI 또는 서버에서 추천받은 소설을 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise((resolve) => {
@@ -30,11 +30,11 @@ const Create_7 = ({ route }) => {
   const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
-  //const [isModalVisible2, setIsModalVisible2] = useState(false);
   const [isEditing, setIsEditing] = useState(false); // 수정 상태 추가
 
   // 저장된 데이터 변수
-  const [savedConcept, setSavedConcept] = useState('');
+  const [savedIdea, setSavedIdea] = useState('');
+  const [savedGenre, setSavedGenre] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
@@ -75,15 +75,22 @@ const Create_7 = ({ route }) => {
     const fetchData = async () => {
       try {
         // 앞에서 저장된 데이터 호출
-        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
+        const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
 
-        if (concept !== null) {
-          setSavedConcept(concept);
+        if (idea !== null) {
+          setSavedIdea(idea);
           // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Concept:', concept);
+          //console.log('Saved Idea:', idea);
+        }
+
+        if (genre !== null) {
+          setSavedGenre(genre);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Genre:', genre);
         }
 
         if (topic !== null) {
@@ -118,7 +125,7 @@ const Create_7 = ({ route }) => {
       setButtonColor1("#9B9AFF");
       if (recommendedNovel === '추천된 소설을 먼저 확인해주세요') { // 처음 누를 때만 추천 소설을 가져옴
         try {
-          const newRecommendedNovel = await fetchRecommendedNovel(savedConcept, savedTopic, savedCharacter, savedPlot);
+          const newRecommendedNovel = await fetchRecommendedNovel(savedIdea, savedGenre, savedTopic, savedCharacter, savedPlot);
           setRecommendedNovel(newRecommendedNovel);
           setIsModalVisible1(true);
         } catch (error) {

@@ -11,7 +11,7 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 주제들을 가져오기
-const fetchRecommendedTopics = async (concept: string) => {
+const fetchRecommendedTopics = async (idea: string, genre: string) => {
   // AI 또는 서버에서 추천받은 주제들을 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise<string[]>((resolve) => {
@@ -37,7 +37,8 @@ const Create_4 = ({ route }) => {
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
   //저장된 데이터 변수
-  const [savedConcept, setSavedConcept] = useState('');
+  const [savedIdea, setSavedIdea] = useState('');
+  const [savedGenre, setSavedGenre] = useState('');
 
   //입력한 주제와 선택한 주제 상태 변수
   const [topic, setTopic] = useState('');
@@ -47,7 +48,7 @@ const Create_4 = ({ route }) => {
   // 최초 화면 상태 변수
   const [buttonText, setButtonText] = useState("주제를 추천받고 싶어요");
   const [image, setImage] = useState(initialImageSource);
-  const [bottomText, setBottomText] = useState('작성 해주신 키워드와 컨셉을 바탕으로\n주제를 3가지 추천해드립니다');
+  const [bottomText, setBottomText] = useState('작성 해주신 키워드와 장르를 바탕으로\n주제를 3가지 추천해드립니다');
 
   // 사용자명 상태 변수
   const [userName, setUserName] = useState('');
@@ -76,12 +77,19 @@ const Create_4 = ({ route }) => {
     const fetchData = async () => {
       try {
         //앞에서 저장된 데이터 호출
-        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
-        if (concept !== null) {
-          setSavedConcept(concept);
+        const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
+        const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
+        if (idea !== null) {
+          setSavedIdea(idea);
           // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Concept:', concept);
+          //console.log('Saved Idea:', idea);
         }
+        if (genre !== null) {
+          setSavedGenre(genre);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Genre:', genre);
+        }
+
       } catch (error) {
         console.error('Failed to load data.', error);
       }
@@ -96,9 +104,9 @@ const Create_4 = ({ route }) => {
     setTimeout(async () => {
       setButtonColor1("#9B9AFF");
 
-      // 저장된 컨셉을 사용하여 AI로부터 추천 받은 주제 배열을 가져옴
+      // 저장된 장르를 사용하여 AI로부터 추천 받은 주제 배열을 가져옴
       try {
-        const newRecommendedTopics = await fetchRecommendedTopics(savedConcept);
+        const newRecommendedTopics = await fetchRecommendedTopics(savedIdea, savedGenre);
         setRecommendedTopics(newRecommendedTopics);
         setIsModalVisible1(true);
       } catch (error) {

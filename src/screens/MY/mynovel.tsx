@@ -13,7 +13,7 @@ const MyNovel = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState('');
-  const [concept, setConcept] = useState('');
+  const [genre, setGenre] = useState('');
   const [novelContent, setNovelContent] = useState('');
 
   useEffect(() => {
@@ -30,12 +30,12 @@ const MyNovel = () => {
       const parsedData = JSON.parse(data);
 
       // concept 값이 JSON 문자열일 경우 배열로 변환
-      if (typeof parsedData.concept === 'string') {
+      if (typeof parsedData.genre === 'string') {
         try {
-          parsedData.concept = JSON.parse(parsedData.concept);
+          parsedData.genre = JSON.parse(parsedData.genre);
         } catch (error) {
           // JSON 파싱 실패 시 문자열 그대로 사용
-          parsedData.concept = parsedData.concept;
+          parsedData.genre = parsedData.genre;
         }
       }
 
@@ -53,9 +53,8 @@ const MyNovel = () => {
   const handlePress = (novel) => {
     setSelectedNovel(novel);
     setTitle(novel.title);
-    //setConcept(novel.concept);
     // 배열을 문자열로 변환하여 설정
-    setConcept(Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept || '');
+    setGenre(Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre || '');
     setNovelContent(novel.novel);
     setModalVisible(true);
   };
@@ -68,7 +67,7 @@ const MyNovel = () => {
 
   const handleSave = async () => {
     try {
-      const updatedNovel = { ...selectedNovel, title, concept: concept.split(',').map(c => c.trim()), novel: novelContent };
+      const updatedNovel = { ...selectedNovel, title, genre: genre.split(',').map(c => c.trim()), novel: novelContent };
       await AsyncStorage.setItem(`novelData_${selectedNovel.id}`, JSON.stringify(updatedNovel));
       console.log('Saving novel and fetching novels again...');
       await fetchNovels();
@@ -110,7 +109,7 @@ const MyNovel = () => {
             </TouchableOpacity>
             <View style={styles.textContainer}>
               <Text style={styles.title} numberOfLines={1} ellipsizeMode='tail'>{novel.title}</Text>
-              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{Array.isArray(novel.concept) ? novel.concept.join(', ') : novel.concept}</Text>
+              <Text style={styles.genre} numberOfLines={1} ellipsizeMode='tail'>{Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre}</Text>
             </View>
           </View>
         ))}
@@ -154,9 +153,9 @@ const MyNovel = () => {
                     />
                     <TextInput
                       style={styles.input}
-                      value={concept}
-                      onChangeText={setConcept}
-                      placeholder="컨셉"
+                      value={genre}
+                      onChangeText={setGenre}
+                      placeholder="장르"
                     />
                     <TextInput
                       style={styles.input}
@@ -170,7 +169,7 @@ const MyNovel = () => {
                 ) : (
                   <View>
                     <Text style={styles.modalTitle}>{selectedNovel.title}</Text>
-                    <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.concept) ? selectedNovel.concept.join(', ') : selectedNovel.concept}</Text>
+                    <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.genre) ? selectedNovel.genre.join(', ') : selectedNovel.genre}</Text>
                     <View style={styles.modalTextContainer}>
                       <Text style={styles.modalText}>{selectedNovel.novel}</Text>
                     </View>

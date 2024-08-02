@@ -14,7 +14,8 @@ const Create_10 = ({ route }) => {
   const [buttonColor, setButtonColor] = useState("#9B9AFF");
 
   // 저장된 데이터 변수
-  const [savedConcept, setSavedConcept] = useState('');
+  const [savedIdea, setSavedIdea] = useState('');
+  const [savedGenre, setSavedGenre] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
   const [savedPlot, setSavedPlot] = useState('');
@@ -49,7 +50,8 @@ const Create_10 = ({ route }) => {
     const fetchData = async () => {
       try {
         // 앞에서 저장된 데이터 호출
-        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
+        const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
         const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
@@ -57,47 +59,53 @@ const Create_10 = ({ route }) => {
         const title = await AsyncStorage.getItem(`novelTitle_${novelId}`)
         const thumbnail = await AsyncStorage.getItem(`novelThumbnail_${novelId}`)
 
-        if (concept !== null) {
-          setSavedConcept(concept);
+        if (idea !== null) {
+          setSavedIdea(idea);
           // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Concept:', concept);
+          console.log('Saved Idea:', idea);
+        }
+
+        if (genre !== null) {
+          setSavedGenre(genre);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          console.log('Saved Genre:', genre);
         }
 
         if (topic !== null) {
           setSavedTopic(topic);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Topic:', topic);
+          console.log('Saved Topic:', topic);
         }
 
         if (character !== null) {
           setSavedCharacter(character);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Character:', character);
+          console.log('Saved Character:', character);
         }
 
         if (plot !== null) {
           setSavedPlot(plot);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Plot:', plot);
+          console.log('Saved Plot:', plot);
         }
 
         if (novel !== null) {
           setSavedNovel(novel);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Novel:', novel);
+          console.log('Saved Novel:', novel);
         }
 
         if (title !== null) {
           setSavedTitle(title);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Title:', title);
+          console.log('Saved Title:', title);
         }
 
         if (thumbnail !== null) {
           const parsedThumbnail = JSON.parse(thumbnail);
           setSavedThumbnail(parsedThumbnail);
           //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Thumbnail:', parsedThumbnail);
+          console.log('Saved Thumbnail:', parsedThumbnail);
         }
       } catch (error) {
           console.error('Failed to load data.', error);
@@ -115,7 +123,8 @@ const Create_10 = ({ route }) => {
       // 전달할 데이터 객체 생성
       const novelData = {
         id: novelId,
-        concept: savedConcept,
+        idea: savedIdea,
+        genre: savedGenre,
         topic: savedTopic,
         character: savedCharacter,
         plot: savedPlot,
