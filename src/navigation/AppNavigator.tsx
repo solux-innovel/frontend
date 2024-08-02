@@ -2,11 +2,16 @@ import React, {useState, createContext} from 'react';
 import {Image} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+
+// Import your screens
 import BottomTabNavigator from './BottomTabNavigator';
 import LoginScreen from '../screens/Login/LoginScreen';
 import Home from '../screens/Home/homescreen';
 import Search from '../screens/Search/searchscreen';
+import RecentViewedScreen from '../screens/Home/RecentViewedScreen';
+import RecommendedScreen from '../screens/Home/RecommendedScreen';
 import My from '../screens/MY/myscreen';
+import GenreScreen from '../screens/Novel/GenreScreen';
 import FindIDScreen from '../screens/Login/FindIDScreen';
 import FindPasswordScreen from '../screens/Login/FindPasswordScreen';
 import SignUpScreen from '../screens/Login/SignUpScreen';
@@ -40,17 +45,7 @@ const AppNavigator = () => {
   return (
     <AuthContext.Provider value={{isLoggedIn, login, logout}}>
       <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerTitle: () => (
-              <Image
-                source={require('C:/solux-innovel/frontend/src/img/logoTitle.png')}
-                style={{width: 150, height: 50}}
-                resizeMode="contain"
-              />
-            ),
-            headerTitleAlign: 'center',
-          }}>
+        <Stack.Navigator>
           {isLoggedIn ? (
             <>
               <Stack.Screen
@@ -63,56 +58,23 @@ const AppNavigator = () => {
               <Stack.Screen name="My" component={My} />
               <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
               <Stack.Screen name="MyNovel" component={MyNovel} />
+              <Stack.Screen name="Genre" component={GenreScreen} />
+              <Stack.Screen
+                name="RecentViewed"
+                component={RecentViewedScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="Recommended"
+                component={RecommendedScreen}
+                options={{headerShown: false}}
+              />
               <Stack.Screen
                 name="Create_1"
                 component={Create_1}
                 options={{title: 'Create'}}
               />
-              <Stack.Screen
-                name="Create_2"
-                component={Create_2}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_3"
-                component={Create_3}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_4"
-                component={Create_4}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_5"
-                component={Create_5}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_6"
-                component={Create_6}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_7"
-                component={Create_7}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_8"
-                component={Create_8}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_9"
-                component={Create_9}
-                options={{title: 'Create'}}
-              />
-              <Stack.Screen
-                name="Create_10"
-                component={Create_10}
-                options={{title: 'Create'}}
-              />
+              {/* Add the rest of your Create screens here */}
             </>
           ) : (
             <>
