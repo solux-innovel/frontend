@@ -5,7 +5,6 @@ import Home from '../screens/Home/homescreen';
 import Search from '../screens/Search/searchscreen';
 import My from '../screens/MY/myscreen';
 import Create from '../screens/Create/create_1';
-import Genre from '../src/screens/Novel/GenreScreen';
 
 const homeIcon = require('../img/home.png');
 const searchIcon = require('../img/search.png');

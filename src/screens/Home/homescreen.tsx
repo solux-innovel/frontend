@@ -1,11 +1,12 @@
-import React from 'react';
-import {View, Text, ScrollView, Image, TouchableOpacity} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../../styles/Home/homescreenStyles';
 
 const Home = () => {
+  const [userName, setUserName] = useState('눈송이'); // 기본값 설정
   const navigation = useNavigation();
-  const userName = '눈송이'; // 더미 데이터로 설정한 사용자 이름
   const genres = [
     '전체',
     '로맨스',
@@ -18,6 +19,21 @@ const Home = () => {
     '라이트노벨',
     '자유장르',
   ];
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const storedUserName = await AsyncStorage.getItem('userNickname');
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user nickname from AsyncStorage', error);
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
@@ -40,9 +56,10 @@ const Home = () => {
               key={index}
               style={[
                 styles.genreItem,
-                index === genres.length - 1 && {marginRight: 16},
+                index === genres.length - 1 && { marginRight: 16 },
               ]}
-              onPress={() => navigation.navigate('Genre', {genre})}>
+              onPress={() => navigation.navigate('Genre', { genre })}
+            >
               <Text style={styles.genreText}>{genre}</Text>
             </TouchableOpacity>
           ))}
@@ -105,7 +122,7 @@ const Home = () => {
       </View>
 
       {/* 여기에 빈 View를 추가하여 하단 여유 공간 확보 */}
-      <View style={{height: 16}} />
+      <View style={{ height: 16 }} />
     </ScrollView>
   );
 };

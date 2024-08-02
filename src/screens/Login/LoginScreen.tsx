@@ -1,26 +1,16 @@
 // src/screens/LoginScreen.tsx
 
 import React, {useContext, useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
+import {View,Text,Image,TouchableOpacity,StyleSheet, Alert,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import axios from 'axios';
 import {AuthContext} from '../../navigation/AppNavigator';
-import NaverLogin, {
-  NaverLoginResponse,
-  GetProfileResponse,
+import NaverLogin, {NaverLoginResponse,GetProfileResponse,
 } from '@react-native-seoul/naver-login';
-import {
-  login as kakaoLogin,
-  getProfile as getKakaoProfile,
-} from '@react-native-seoul/kakao-login';
+import {login as kakaoLogin,getProfile as getKakaoProfile,} from '@react-native-seoul/kakao-login';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const androidKeys = {
   consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
@@ -65,18 +55,21 @@ const LoginScreen: React.FC = () => {
       console.log('email:', email);
 
       // 백엔드 서버에 사용자 정보 전송
-      const response = await fetch('https://your-domain-name/api/users/login', {
+      const response = await fetch('http://10.101.38.18:8080/innovel/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           id: id,
-          name: nickname,
+          nickname: nickname,
           email: email,
-          mobile: '', // mobile 필드는 Kakao 프로필에서 제공되지 않으므로 빈 문자열로 설정
         }),
       });
+
+      await AsyncStorage.setItem('userId', String(id));
+      await AsyncStorage.setItem('userNickname', nickname);
+      await AsyncStorage.setItem('userEmail', email);
 
       const responseData = await response.json();
       if (response.ok) {
@@ -104,7 +97,7 @@ const LoginScreen: React.FC = () => {
 
         // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
         const response = await fetch(
-          'https://your-domain-name/api/users/login',
+          'http://10.101.38.18:8080/innovel/users/login',
           {
             method: 'POST',
             headers: {
@@ -117,6 +110,10 @@ const LoginScreen: React.FC = () => {
             }),
           },
         );
+
+        await AsyncStorage.setItem('userId', String(profile.response.id));
+        await AsyncStorage.setItem('userNickname', String(profile.response.nickname));
+        await AsyncStorage.setItem('userEmail', profile.response.email);
 
         if (response.status === 200) {
           Alert.alert('로그인 성공', '백엔드로 사용자 프로필 전송 성공');
