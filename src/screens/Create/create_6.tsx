@@ -11,7 +11,7 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 줄거리를 가져오기
-const fetchRecommendedPlot = async (concept: string, topic: string, character: string) => {
+const fetchRecommendedPlot = async (idea: string, genre: string, topic: string, character: string) => {
   // AI 또는 서버에서 추천받은 줄거리를 비동기적으로 가져옴
   // 이 부분을 실제 AI API 호출로 대체
   return new Promise((resolve) => {
@@ -33,7 +33,8 @@ const Create_6 = ({ route }) => {
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
   // 저장된 데이터 변수
-  const [savedConcept, setSavedConcept] = useState('');
+  const [savedIdea, setSavedIdea] = useState('');
+  const [savedGenre, setSavedGenre] = useState('');
   const [savedTopic, setSavedTopic] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
 
@@ -73,14 +74,19 @@ const Create_6 = ({ route }) => {
     const fetchData = async () => {
       try {
         // 앞에서 저장된 데이터 호출
-        const concept = await AsyncStorage.getItem(`novelConcept_${novelId}`);
+        const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
+        const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
         const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
-
-        if (concept !== null) {
-          setSavedConcept(concept);
+        if (idea !== null) {
+          setSavedIdea(idea);
           // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Concept:', concept);
+          //console.log('Saved Idea:', idea);
+        }
+        if (genre !== null) {
+          setSavedGenre(genre);
+          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
+          //console.log('Saved Genre:', genre);
         }
 
         if (topic !== null) {
@@ -109,7 +115,7 @@ const Create_6 = ({ route }) => {
       setButtonColor1("#9B9AFF");
       // 저장된 데이터를 사용하여 AI로부터 추천 받은 줄거리를 가져옴
       try {
-        const newRecommendedPlot = await fetchRecommendedPlot(savedConcept, savedTopic, savedCharacter);
+        const newRecommendedPlot = await fetchRecommendedPlot(savedIdea, savedGenre, savedTopic, savedCharacter);
         setRecommendedPlot(newRecommendedPlot);
         setIsModalVisible1(true);
       } catch (error) {
