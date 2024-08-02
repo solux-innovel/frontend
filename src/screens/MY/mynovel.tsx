@@ -44,6 +44,7 @@ const MyNovel = () => {
         const data = await AsyncStorage.getItem(key);
         const parsedData = JSON.parse(data);
 
+
         // genre 값이 JSON 문자열일 경우 배열로 변환
         if (typeof parsedData.genre === 'string') {
           try {
@@ -52,6 +53,8 @@ const MyNovel = () => {
             // JSON 파싱 실패 시 문자열 그대로 사용
             parsedData.genre = parsedData.genre;
           }
+
+    
         }
 
         return parsedData;
@@ -90,6 +93,8 @@ const MyNovel = () => {
   const handlePress = (novel) => {
     setSelectedNovel(novel);
     setTitle(novel.title);
+    // 배열을 문자열로 변환하여 설정
+
     setGenre(Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre || '');
     setNovelContent(novel.novel);
     setModalVisible(true);
@@ -147,8 +152,10 @@ const MyNovel = () => {
               <Image source={novel.thumbnail ? { uri: novel.thumbnail } : thumbnailImage} style={styles.thumbnail} />
             </TouchableOpacity>
             <View style={styles.textContainer}>
+              
               <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{novel.title}</Text>
               <Text style={styles.genre} numberOfLines={1} ellipsizeMode="tail">{Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre}</Text>
+
             </View>
           </View>
         ))}
