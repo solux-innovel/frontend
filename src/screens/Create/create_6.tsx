@@ -27,6 +27,7 @@ const fetchRecommendedPlot = async (
   character: string,
 ) => {
   try {
+    // 아이디어, 장르, 주제, 등장인물에 대한 상세한 질문을 포함하여 줄거리 요청
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -34,10 +35,16 @@ const fetchRecommendedPlot = async (
         messages: [
           {
             role: 'user',
-            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n등장인물: ${character}\n이 정보를 바탕으로 소설의 줄거리를 완전한 문장으로 작성해줘.`,
+            content: `다음 정보들을 바탕으로 소설의 줄거리를 작성해 주세요. 줄거리는 아래의 요소들을 포함하며, 문장이 자연스럽고 완전하게 끝나도록 해 주세요:
+              1. 아이디어: ${idea}
+              2. 장르: ${genre}
+              3. 주제: ${selectedTopic}
+              4. 등장인물: ${character}
+              
+              줄거리는 다음 육하원칙(누가, 언제, 어디서, 무엇을, 왜, 어떻게)을 포함해야 합니다. 이야기의 흐름이 자연스럽고 일관되게 유지되며, 문장이 끊기지 않고 완전하게 끝맺어지도록 작성해 주세요. 문장들이 매끄럽게 이어지도록 해 주세요.`,
           },
         ],
-        max_tokens: 150,
+        max_tokens: 1000, // 더 긴 줄거리를 요청
         temperature: 0.7,
       },
       {
