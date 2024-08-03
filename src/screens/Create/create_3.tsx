@@ -165,10 +165,16 @@ const Create_3 = ({route}) => {
                   key={index}
                   style={[
                     styles.genreButton,
-                    selectedGenre.includes(genre) && styles.selectedGenreButton,
+                    selectedGenre === genre && styles.selectedGenreButton,
                   ]}
                   onPress={() => handleGenreSelect(genre)}>
-                  <Text style={styles.genreButtonText}>{genre}</Text>
+                  <Text
+                    style={[
+                      styles.genreButtonText,
+                      selectedGenre === genre && styles.selectedGenreButtonText,
+                    ]}>
+                    {genre}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -177,7 +183,7 @@ const Create_3 = ({route}) => {
               <TouchableOpacity
                 style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
                 onPress={onPressOkayButton}>
-                <Text style={styles.buttonText}>확정</Text>
+                <Text style={styles.buttonText}>저장</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -239,7 +245,7 @@ const styles = StyleSheet.create({
     margin: 35,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 25,
+    padding: 30,
     alignItems: 'center',
   },
   closeButton: {
@@ -256,8 +262,8 @@ const styles = StyleSheet.create({
   },
   okayButton: {
     height: 40,
-    width: '40%',
-    borderRadius: 15,
+    width: '30%',
+    borderRadius: 20,
     backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -275,13 +281,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#E0E0E0',
     alignItems: 'center',
+    width: 100, // 버튼 가로 길이를 동일하게 설정
   },
   selectedGenreButton: {
-    backgroundColor: '#A2A2A2',
+    backgroundColor: '#9B9AFF',
   },
   genreButtonText: {
     color: '#000000',
     fontSize: 16,
+  },
+  selectedGenreButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });
 
