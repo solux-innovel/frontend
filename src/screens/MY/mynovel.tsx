@@ -22,6 +22,7 @@ const MyNovel = () => {
       try {
         //유저 아이디
         const storedUserId = await AsyncStorage.getItem('userId');
+        console.log('Stored User ID:', storedUserId); // 추가된 로그
         if (storedUserId) {
           setUserId(storedUserId);
           fetchNovels(storedUserId);
@@ -34,6 +35,29 @@ const MyNovel = () => {
     fetchUserId(); // 처음 로딩 시 userId를 가져오고 소설 목록을 가져옵니다.
   }, []);
 
+  const fetchNovels = async (userId: string) => {
+    try {
+      const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost?socialId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const responseData = await response.json();
+      console.log('Response Data:', responseData);
+
+      if (response.ok) {
+        setNovels(responseData.posts);
+      } else {
+        console.error('Failed to fetch novels from backend');
+      }
+    } catch (error) {
+      console.error('Failed to load novels.', error);
+    }
+  };
+
+  {/*
   const fetchNovels = async (userId: string) => {
     try {
       // 기존 AsyncStorage에서 소설 목록 가져오기
@@ -53,8 +77,6 @@ const MyNovel = () => {
             // JSON 파싱 실패 시 문자열 그대로 사용
             parsedData.genre = parsedData.genre;
           }
-
-    
         }
 
         return parsedData;
@@ -72,13 +94,16 @@ const MyNovel = () => {
 
   const sendUserIdToBackend = async (userId: string) => {
     try {//백엔드 엔드포인트 변경 필요
-      const response = await fetch('http://10.101.38.18:8080/api/user', {
-        method: 'POST',
+      const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost?socialId=${userId}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        //body: JSON.stringify({ userId }),
       });
+
+      const responseData=await response.json();
+      console.log('Response Data:', responseData)
 
       if (!response.ok) {
         throw new Error('Failed to send user ID to backend');
@@ -89,15 +114,44 @@ const MyNovel = () => {
       console.error('Error sending user ID to backend:', error);
     }
   };
+  */}
 
-  const handlePress = (novel) => {
+
+  const handlePress = async (novel) => {
     setSelectedNovel(novel);
-    setTitle(novel.title);
+
+    console.log('Selected Novel:', novel); // novel 객체 전체 출력
+    console.log('Novel ID:', novel.id); // novel.id 출력
+    //setTitle(novel.title);
     // 배열을 문자열로 변환하여 설정
 
-    setGenre(Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre || '');
-    setNovelContent(novel.novel);
+    //setGenre(Array.isArray(novel.genre) ? novel.genre.join(', ') : novel.genre || '');
+    //setNovelContent(novel.novel);
     setModalVisible(true);
+
+
+  try {
+    const response = await fetch(`http://10.101.38.18:8080/innovel/posts/${novel.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const responseData = await response.json();
+    console.log('Detailed Novel Data:', responseData);
+
+    if (response.ok) {
+      // 상세 소설 데이터를 상태에 설정
+      setTitle(responseData.title);
+      setGenre(Array.isArray(responseData.genre) ? responseData.genre.join(', ') : responseData.genre || '');
+      setNovelContent(responseData.content);
+    } else {
+      console.error('Failed to fetch detailed novel data from backend');
+    }
+  } catch (error) {
+    console.error('Failed to load detailed novel data.', error);
+  }
   };
 
   const closeModal = () => {
@@ -106,6 +160,7 @@ const MyNovel = () => {
     setEditMode(false);
   };
 
+  {/*
   const handleSave = async () => {
     try {
       const updatedNovel = { ...selectedNovel, title, genre: genre.split(',').map(c => c.trim()), novel: novelContent };
@@ -119,29 +174,62 @@ const MyNovel = () => {
       console.error('Failed to save the novel.', error);
     }
   };
+  */}
+
+const handleSave = async () => {
+  try {
+    // 업데이트된 소설 데이터 생성
+    const updatedNovel = {
+      title: title,
+      content: novelContent
+    };
+
+    // 소설 데이터를 백엔드에 전송
+    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+      method: 'PUT', // 데이터 업데이트를 위한 HTTP 메서드
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedNovel), // JSON 형식으로 변환
+    });
+
+    if (response.ok) {
+      console.log('Novel updated successfully');
+      if (userId) {
+        await fetchNovels(userId); // 업데이트 후 소설 목록 다시 가져오기
+      }
+      closeModal(); // 모달 닫기
+    } else {
+      console.error('Failed to update the novel.', await response.text()); // 에러 메시지 출력
+    }
+  } catch (error) {
+    console.error('Failed to save the novel.', error);
+  }
+};
 
   const handleDelete = async () => {
-    try {
-      const novelKey = `novelData_${selectedNovel.id}`;
-      await AsyncStorage.removeItem(novelKey);
+  try {
+    // Delete request to the backend with the novel ID
+    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+      method: 'DELETE', // DELETE method for deleting resources
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-      // 삭제 후 확인
-      const itemAfterDeletion = await AsyncStorage.getItem(novelKey);
-      if (itemAfterDeletion === null) {
-        console.log(`Novel with key ${novelKey} successfully deleted.`);
-      } else {
-        console.error(`Failed to delete novel with key ${novelKey}. Item still exists:`, itemAfterDeletion);
-      }
-
-      console.log('Deleting novel and fetching novels again...');
+    if (response.ok) {
+      console.log('Novel deleted successfully');
       if (userId) {
-        await fetchNovels(userId); // userId를 사용하여 소설 목록을 다시 가져옵니다.
+        await fetchNovels(userId); // Fetch the updated list of novels
       }
-      closeModal();
-    } catch (error) {
-      console.error('Failed to delete the novel.', error);
+      closeModal(); // Close the modal
+    } else {
+      console.error('Failed to delete the novel.', await response.text());
     }
-  };
+  } catch (error) {
+    console.error('Failed to delete the novel.', error);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -197,12 +285,15 @@ const MyNovel = () => {
                       onChangeText={setTitle}
                       placeholder="제목"
                     />
+                    {/*
                     <TextInput
                       style={styles.input}
                       value={genre}
                       onChangeText={setGenre}
                       placeholder="장르"
                     />
+                    */}
+                    <Text style={styles.input}>{Array.isArray(selectedNovel.genre) ? selectedNovel.genre.join(', ') : selectedNovel.genre}</Text>
                     <TextInput
                       style={styles.input}
                       value={novelContent}
@@ -217,7 +308,7 @@ const MyNovel = () => {
                     <Text style={styles.modalTitle}>{selectedNovel.title}</Text>
                     <Text style={styles.modalGenre}>{Array.isArray(selectedNovel.genre) ? selectedNovel.genre.join(', ') : selectedNovel.genre}</Text>
                     <View style={styles.modalTextContainer}>
-                      <Text style={styles.modalText}>{selectedNovel.novel}</Text>
+                      <Text style={styles.modalText}>{novelContent}</Text>
                     </View>
                   </View>
                 )}

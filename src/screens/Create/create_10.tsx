@@ -26,10 +26,33 @@ const Create_10 = ({ route }) => {
   // 사용자명 상태 변수
   const [userName, setUserName] = useState('');
 
+  // 사용자명 상태 변수
+  const [userId, setUserId] = useState('');
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user id.', error);
+      }
+    };
+
+    fetchUserId();
+    // 사용자 ID 변경을 감지하기 위한 interval 설정
+    const interval = setInterval(fetchUserId, 1000); // 1초마다 업데이트 체크
+
+    // 컴포넌트 언마운트 시 interval 클리어
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }
@@ -115,6 +138,31 @@ const Create_10 = ({ route }) => {
     fetchData();
   }, [novelId]);
 
+  // 소설 데이터를 백엔드로 전송하는 함수
+  const sendNovelDataToBackend = async (novelData) => {
+    try {
+      const response = await fetch('http://10.101.38.18:8080/innovel/posts/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novelData),
+      });
+
+      if (!response.ok) {
+      const responseText = await response.text(); // 응답 본문을 텍스트로 변환
+      console.error('Response Status:', response.status); // 응답 상태 코드 출력
+      console.error('Response Text:', responseText); // 응답 본문 출력
+      throw new Error('Failed to send novel data to backend');
+      }
+
+      console.log('Novel data sent to backend successfully.');
+    } catch (error) {
+      console.error('Error sending novel data to backend:', error);
+    }
+  };
+
+  {/*
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton = async () => {
     setButtonColor("#000000");
@@ -135,6 +183,46 @@ const Create_10 = ({ route }) => {
       try {
         // 데이터 저장
         await AsyncStorage.setItem(`novelData_${novelId}`, JSON.stringify(novelData));
+
+        // currentNovelId 초기화
+        await AsyncStorage.removeItem('currentNovelId');
+
+        // 홈 화면으로 이동
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              { name: 'Main', state: { routes: [{ name: 'Home' }] } },
+            ],
+          })
+        );
+      } catch (error) {
+        console.error('Failed to save novel data.', error);
+      }
+    }, 50); // 버튼 색상 복구
+  };
+  */}
+
+  // 첫 번째 버튼 색상 변경 함수
+  const handlePressButton = async () => {
+    setButtonColor("#000000");
+    setTimeout(async () => {
+      setButtonColor("#9B9AFF");
+
+      // 전달할 데이터 객체 생성
+      const novelData = {
+        socialId: userId,    // AsyncStorage에서 가져온 사용자 ID
+        title: savedTitle,
+        genre: savedGenre,
+        content: savedNovel,
+      };
+
+    // 전송할 데이터 객체 로그에 출력
+    console.log('Novel Data to be sent:', novelData);
+
+      try {
+        // 백엔드로 데이터 전송
+        await sendNovelDataToBackend(novelData);
 
         // currentNovelId 초기화
         await AsyncStorage.removeItem('currentNovelId');
