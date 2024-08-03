@@ -14,7 +14,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {OPENAI_API_KEY} from '@env'; // Import the environment variable
+import {OPENAI_API_KEY} from '@env'; // 환경 변수 가져오기
 
 const initialImageSource = require('../../img/Create/Create4-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
@@ -24,36 +24,49 @@ const backButtonImage = require('../../img/Create/BackSquare.png');
 // 비동기 함수로 AI로부터 추천받은 주제들을 가져오기
 const fetchRecommendedTopics = async (idea: string, genre: string) => {
   try {
+    // 더 상세한 프롬프트 생성
+    const prompt = `
+      당신은 창의적인 보조 역할을 맡고 있습니다.
+      다음 정보를 바탕으로:
+      - 아이디어: "${idea}"
+      - 장르: "${genre}"
+
+      이 정보에 맞는 독창적이고 창의적인 주제 3개를 제안해 주세요. 각 주제는 한 줄로 명확히 구분되어야 합니다.
+      가능하면 상상력이 풍부하고 장르에 적합한 주제를 제안해 주세요.
+    `;
+
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
         model: 'gpt-3.5-turbo',
         messages: [
-          {role: 'system', content: 'You are a helpful assistant.'},
           {
-            role: 'user',
-            content: `아이디어 "${idea}"와 장르 "${genre}"를 바탕으로 3가지 창의적인 주제를 추천해 주세요. 주제는 한 줄씩 나열해 주세요.`,
+            role: 'system',
+            content: '당신은 창의적인 보조 역할을 맡고 있습니다.',
           },
+          {role: 'user', content: prompt},
         ],
-        max_tokens: 150,
-        temperature: 0.7,
+        max_tokens: 200, // 상세한 응답을 위해 토큰 수 증가
+        temperature: 0.8, // 더 창의적인 결과를 위해 온도 조정
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`, // Use environment variable
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
       },
     );
 
-    // 응답에서 주제 추출 (줄바꿈 기준으로 분리)
+    // 응답에서 주제 추출 및 정리
     const suggestedTopics = response.data.choices[0].message.content
       .split('\n')
-      .filter(Boolean);
-    return suggestedTopics.slice(0, 3); // 3개의 주제만 반환
+      .filter(Boolean)
+      .map(topic => topic.trim());
+
+    return suggestedTopics.slice(0, 3); // 최대 3개의 주제 반환
   } catch (error) {
-    console.error('Failed to fetch recommended topics.', error);
-    throw new Error('Failed to fetch recommended topics.');
+    console.error('주제 추천 요청에 실패했습니다.', error);
+    throw new Error('주제 추천 요청에 실패했습니다.');
   }
 };
 
@@ -91,7 +104,7 @@ const Create_4 = ({route}) => {
           setUserName(storedUserName);
         }
       } catch (error) {
-        console.error('Failed to fetch user name.', error);
+        console.error('사용자 이름 가져오기 실패.', error);
       }
     };
 
@@ -113,7 +126,7 @@ const Create_4 = ({route}) => {
           setSavedGenre(genre);
         }
       } catch (error) {
-        console.error('Failed to load data.', error);
+        console.error('데이터 로드 실패.', error);
       }
     };
 
@@ -133,7 +146,7 @@ const Create_4 = ({route}) => {
         setRecommendedTopics(newRecommendedTopics);
         setIsModalVisible1(true);
       } catch (error) {
-        console.error('Failed to fetch recommended topics.', error);
+        console.error('주제 추천 요청에 실패했습니다.', error);
       }
     }, 50);
   };
@@ -148,7 +161,7 @@ const Create_4 = ({route}) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
-    // 아래 코드는 모달을 닫으면서 주제를 다시 추천받는 부분을 포함합니다.
+    // 모달을 닫으면서 주제를 다시 추천받는 부분 포함
     setButtonText('주제를 다시 추천받고 싶어요');
     setImage(againImage);
     setBottomText(
@@ -162,7 +175,7 @@ const Create_4 = ({route}) => {
       setIsModalVisible2(false);
       navigation.navigate('Create_5', {novelId});
     } catch (e) {
-      console.error('Failed to save topic.', e);
+      console.error('주제 저장 실패.', e);
     }
   };
 
@@ -177,7 +190,7 @@ const Create_4 = ({route}) => {
           setIsModalVisible1(false);
           navigation.navigate('Create_5', {novelId});
         } catch (e) {
-          console.error('Failed to save topic.', e);
+          console.error('주제 저장 실패.', e);
         }
       } else {
         Alert.alert('경고', '주제를 선택해주세요.');
@@ -320,7 +333,7 @@ const styles = StyleSheet.create({
   },
   recommendButton: {
     position: 'absolute',
-    bottom: -50, // Adjust this value to move the button further up or down
+    bottom: -50, // 이 값을 조정하여 버튼의 위치를 조정하세요
     height: 60,
     width: '90%',
     borderRadius: 15,
@@ -335,7 +348,7 @@ const styles = StyleSheet.create({
   },
   customButton: {
     position: 'absolute',
-    bottom: -120, // Adjust this value to position the button directly below the recommendButton
+    bottom: -120, // 이 값을 조정하여 버튼의 위치를 조정하세요
     height: 60,
     width: '90%',
     borderRadius: 15,
