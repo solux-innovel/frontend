@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { generateImage } from '../../services/imageGenerator';
 
 // AI로부터 추천받은 이미지를 가져오는 비동기 함수
 const fetchAICoverImage = async (idea: string, genre: string, topic: string, character: string, plot: string, novel: string, title: string) => {
@@ -15,11 +16,9 @@ const fetchAICoverImage = async (idea: string, genre: string, topic: string, cha
     //const data = await response.json();
     //const newImageUri = data.imageUri;
 
-    // 예시로 로컬 이미지 추가
-    const newImageUri = Image.resolveAssetSource(require('../../img/Create/Create9-2_image.png')).uri;
+    const prompt = `${topic}, ${title}`;
+    const newImageUri = await generateImage(prompt);
 
-    // 이미지 경로를 업데이트
-    //setImagePaths([...imagePaths, { uri: newImageUri }]);
     return newImageUri;
   } catch (error) {
     console.error('Failed to fetch AI image.', error);
