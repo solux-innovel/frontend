@@ -67,41 +67,64 @@ const fetchRecommendedTopics = async (idea, genre) => {
 // API 호출로 등장인물 프로필 추출하기
 const extractCharacterProfiles = async (story, topic) => {
   try {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {role: 'system', content: 'You are a helpful assistant.'},
+    // 5번 API 호출을 준비합니다.
+    const requests = [];
+    for (let i = 0; i < 5; i++) {
+      requests.push(
+        axios.post(
+          'https://api.openai.com/v1/chat/completions',
           {
-            role: 'user',
-            content: `다음 이야기를 바탕으로 등장인물의 프로필을 단답형으로 제공해 주세요. 각 프로필은 다음 형식으로 출력되어야 합니다:\n이름: [이름]\n나이: [나이]\n성별: [성별]\n직업: [직업]\n특징: [특징]\n\n줄거리를 포함하지 말고, 단답형으로만 작성해 주세요.\n\n이야기:\n\n${story}\n\n주제: ${topic}`,
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {role: 'system', content: 'You are a helpful assistant.'},
+              {
+                role: 'user',
+                content: `다음 이야기를 바탕으로 등장인물의 프로필을 단답형으로 제공해 주세요. 각 프로필은 다음 형식으로 출력되어야 합니다:\n이름: [이름]\n나이: [나이]\n성별: [성별]\n직업: [직업]\n특징: [특징]\n\n줄거리를 포함하지 말고, 단답형으로만 작성해 주세요.\n\n이야기:\n\n${story}\n\n주제: ${topic}\n\n아이디어, 장르, 주제, 스토리와 관련이 깊은 등장인물 3명을 추천해 주세요.`,
+              },
+            ],
+            max_tokens: 300, // 각 응답이 충분히 포함할 수 있도록 적절한 토큰 수 설정
+            temperature: 0.7, // 창의적인 응답을 유도하기 위한 온도 설정
           },
-        ],
-        max_tokens: 500,
-        temperature: 0.5,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`, // .env에서 가져온 API 키를 사용합니다.
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+          {
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`, // .env에서 가져온 API 키를 사용합니다.
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+    }
 
-    const profilesText = response.data.choices[0].message.content.trim();
-    const profiles = profilesText.split('\n\n').map(profileText => {
-      const lines = profileText.split('\n');
-      return {
-        name: lines[0]?.replace('이름: ', '').trim() || '',
-        age: lines[1]?.replace('나이: ', '').trim() || '',
-        gender: lines[2]?.replace('성별: ', '').trim() || '',
-        occupation: lines[3]?.replace('직업: ', '').trim() || '',
-        characteristics: lines[4]?.replace('특징: ', '').trim() || '',
-      };
+    // 모든 요청을 병렬로 실행하고 응답을 기다립니다.
+    const responses = await Promise.all(requests);
+
+    // 응답에서 프로필 추출
+    const profiles = responses.flatMap(response => {
+      const profilesText = response.data.choices[0].message.content.trim();
+      return profilesText
+        .split('\n\n')
+        .map(profileText => {
+          const lines = profileText.split('\n');
+          if (lines.length === 5) {
+            // 프로필 형식이 정확한지 확인
+            return {
+              name: lines[0]?.replace('이름: ', '').trim() || '',
+              age: lines[1]?.replace('나이: ', '').trim() || '',
+              gender: lines[2]?.replace('성별: ', '').trim() || '',
+              occupation: lines[3]?.replace('직업: ', '').trim() || '',
+              characteristics: lines[4]?.replace('특징: ', '').trim() || '',
+            };
+          }
+          return null;
+        })
+        .filter(profile => profile !== null);
     });
 
-    return profiles;
+    // 중복된 프로필 제거 및 최대 3개의 프로필 반환
+    const uniqueProfiles = Array.from(
+      new Set(profiles.map(profile => JSON.stringify(profile))),
+    ).map(profile => JSON.parse(profile));
+    return uniqueProfiles.slice(0, 3); // 최대 3개의 프로필 반환
   } catch (error) {
     if (error.response) {
       console.error('API Error:', error.response.data);
