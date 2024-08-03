@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SearchEntry {
   query: string;
   date: string;
+  type: string; // 검색 유형 (예: 'user' 또는 'title')
 }
 
 const searchImage = require('../../img/searchImage.png');
@@ -20,6 +21,7 @@ const magnifierImage = require('../../img/magnifier.png');
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'user' | 'title'>('user');
   const [recentSearches, setRecentSearches] = useState<SearchEntry[]>([]);
 
   useEffect(() => {
@@ -46,6 +48,7 @@ const SearchScreen = () => {
     const searchEntry: SearchEntry = {
       query,
       date: `${date.getMonth() + 1}.${date.getDate()}`,
+      type: searchType, // 현재 검색 유형을 추가
     };
 
     try {
@@ -61,7 +64,6 @@ const SearchScreen = () => {
 
       await AsyncStorage.setItem('recentSearches', JSON.stringify(searches));
       setRecentSearches(searches);
-      1;
     } catch (error) {
       console.error(error);
     }
@@ -69,7 +71,6 @@ const SearchScreen = () => {
     setSearchQuery('');
   };
 
-  // 최근 검색어 항목 개수에 따라 동적으로 스타일을 계산
   const getRecentSearchWrapperStyle = () => ({
     borderRadius: 10,
     borderWidth: recentSearches.length > 0 ? 2 : 0, // 최소 한 개 이상일 때만 테두리가 보이도록
@@ -79,13 +80,27 @@ const SearchScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* 검색 유형 선택 탭 */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, searchType === 'user' && styles.activeTab]}
+          onPress={() => setSearchType('user')}>
+          <Text style={searchType === 'user' ? styles.activeTabText : styles.tabText}>유저 검색</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, searchType === 'title' && styles.activeTab]}
+          onPress={() => setSearchType('title')}>
+          <Text style={searchType === 'title' ? styles.activeTabText : styles.tabText}>제목 검색</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.searchContainer}>
         <TouchableOpacity>
           <Image source={magnifierImage} style={styles.magnifierImage} />
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder="소설 제목, 작가, 장르를 검색해주세요"
+          placeholder={`소설 ${searchType === 'title' ? '제목' : '유저 이름'}을 검색해주세요`}
           value={searchQuery}
           onChangeText={text => setSearchQuery(text)}
           onSubmitEditing={() => handleSearch(searchQuery)}
@@ -100,7 +115,12 @@ const SearchScreen = () => {
             <TouchableOpacity>
               <View style={styles.recentSearchItem}>
                 <Text>{item.query}</Text>
-                <Text>{item.date}</Text>
+                <View style={styles.dateAndTypeWrapper}>
+                  <Text style={styles.searchTypeText}>
+                    {item.type === 'user' ? '유저 이름' : '제목'}
+                  </Text>
+                  <Text>{item.date}</Text>
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -115,6 +135,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: '#BDB9FE',
+  },
+  activeTab: {
+    borderBottomColor: '#4B3FFF',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#BDB9FE',
+  },
+  activeTabText: {
+    color: '#4B3FFF',
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -145,6 +187,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomColor: '#BDB9FE',
     borderBottomWidth: 1,
+  },
+  dateAndTypeWrapper: {
+    flexDirection: 'row', // 날짜와 검색 유형을 수평으로 배치
+    alignItems: 'center',
+  },
+  searchTypeText: {
+    color: '#BDB9FE', // 연한 회색으로 텍스트 스타일링
+    marginRight: 10, // 날짜와 검색 유형 간의 간격 조정
   },
 });
 
