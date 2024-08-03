@@ -1,8 +1,15 @@
-// src/screens/Create/create_2.tsx
-
-import React, { useState, useEffect } from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Pressable,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create2_image.png');
@@ -17,7 +24,7 @@ const generateUniqueId = () => {
 const Create_2 = () => {
   const navigation = useNavigation();
 
-  const [buttonColor, setButtonColor] = useState("#9B9AFF");
+  const [buttonColor, setButtonColor] = useState('#9B9AFF');
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [idea, setIdea] = useState('');
@@ -55,7 +62,7 @@ const Create_2 = () => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userNickname');
+        const storedUserName = await AsyncStorage.getItem('userName');
         if (storedUserName) {
           setUserName(storedUserName);
         }
@@ -74,9 +81,9 @@ const Create_2 = () => {
 
   // 첫 번째 버튼 색상 변경 함수
   const handlePress = () => {
-    setButtonColor("#000000");
+    setButtonColor('#000000');
     setTimeout(() => {
-      setButtonColor("#9B9AFF");
+      setButtonColor('#9B9AFF');
       setIsModalVisible(true);
     }, 50); // 버튼 색상 복구
   };
@@ -85,7 +92,7 @@ const Create_2 = () => {
     try {
       await AsyncStorage.setItem(`novelIdea_${novelId}`, idea);
       setIsModalVisible(false);
-      navigation.navigate('Create_3', { novelId });
+      navigation.navigate('Create_3', {novelId});
     } catch (error) {
       console.error('Failed to save idea.', error);
     }
@@ -98,11 +105,20 @@ const Create_2 = () => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{`${userName} 창작자님 소설의\n아이디어를 마구마구 떠올려 봅시다`}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'아이디어를 다 떠올리셨나요?\n아이디어를 키워드로 작성해주세요!\n아이디어는 구체적일수록\n앞으로의 창작에 큰 도움이 됩니다!'}</Text>
+        <Text
+          style={
+            styles.topText
+          }>{`${userName} 창작자님 소설의\n아이디어를 마구마구 떠올려 봅시다`}</Text>
+        <Image source={imageSource} style={styles.image} />
+        <Text style={styles.bottomText}>
+          {
+            '아이디어를 다 떠올리셨나요?\n아이디어를 키워드로 작성해주세요!\n아이디어는 구체적일수록\n앞으로의 창작에 큰 도움이 됩니다!'
+          }
+        </Text>
       </View>
-      <TouchableOpacity  style={[styles.button, {backgroundColor: buttonColor}]} onPress={handlePress}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor}]}
+        onPress={handlePress}>
         <Text style={styles.buttonText}>아이디어 키워드를 작성하고 싶어요</Text>
       </TouchableOpacity>
 
@@ -115,7 +131,14 @@ const Create_2 = () => {
             <Pressable style={styles.saveButton} onPress={handlePressSave}>
               <Text style={styles.saveButtonText}>저장</Text>
             </Pressable>
-            <TextInput style={styles.textInput} placeholder="아이디어 키워드를 직접 작성해주세요" placeholderTextColor="#FFFFFF" maxLength={100} value={idea} onChangeText={setIdea}/>
+            <TextInput
+              style={styles.textInput}
+              placeholder="아이디어 키워드를 직접 작성해주세요"
+              placeholderTextColor="#FFFFFF"
+              maxLength={100}
+              value={idea}
+              onChangeText={setIdea}
+            />
           </View>
         </View>
       </Modal>
@@ -156,7 +179,7 @@ const styles = StyleSheet.create({
     height: 60,
     width: '90%',
     borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
