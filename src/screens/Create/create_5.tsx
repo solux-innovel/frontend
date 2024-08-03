@@ -131,6 +131,12 @@ const Create_5 = ({route}) => {
   const [topic, setTopic] = useState('');
   const [recommendedCharacters, setRecommendedCharacters] = useState([]);
 
+  const [characterName, setCharacterName] = useState('');
+  const [characterAge, setCharacterAge] = useState('');
+  const [characterGender, setCharacterGender] = useState('');
+  const [characterOccupation, setCharacterOccupation] = useState('');
+  const [characterCharacteristics, setCharacterCharacteristics] = useState('');
+
   const [buttonText, setButtonText] = useState('등장인물을 추천받고 싶어요');
   const [image, setImage] = useState(initialImageSource);
   const [bottomText, setBottomText] = useState(
@@ -266,6 +272,24 @@ const Create_5 = ({route}) => {
     }, 50);
   };
 
+  const handleSaveCharacter = () => {
+    const newCharacter = {
+      name: characterName,
+      age: characterAge,
+      gender: characterGender,
+      occupation: characterOccupation,
+      characteristics: characterCharacteristics,
+    };
+
+    setRecommendedCharacters([...recommendedCharacters, newCharacter]);
+    setCharacterName('');
+    setCharacterAge('');
+    setCharacterGender('');
+    setCharacterOccupation('');
+    setCharacterCharacteristics('');
+    setIsModalVisible2(false);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
@@ -284,7 +308,9 @@ const Create_5 = ({route}) => {
         <TouchableOpacity
           style={[styles.button, {backgroundColor: buttonColor2}]}
           onPress={handlePressButton2}>
-          <Text style={styles.buttonText}>등장인물 직접 작성하기</Text>
+          <Text style={styles.buttonText}>
+            등장인물을 직접 작성하고 싶어요.
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -314,7 +340,7 @@ const Create_5 = ({route}) => {
             <Pressable
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.okayButtonText}>확인</Text>
+              <Text style={styles.okayButtonText}>저장</Text>
             </Pressable>
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} style={styles.closeImage} />
@@ -331,10 +357,40 @@ const Create_5 = ({route}) => {
         onRequestClose={() => setIsModalVisible2(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text>등장인물을 직접 작성해 주세요.</Text>
+            <Text style={styles.modalTitle}>등장인물을 작성해 주세요</Text>
+            <TextInput
+              placeholder="이름을 입력하세요"
+              value={characterName}
+              onChangeText={setCharacterName}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="나이를 입력하세요"
+              value={characterAge}
+              onChangeText={setCharacterAge}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="성별을 입력하세요"
+              value={characterGender}
+              onChangeText={setCharacterGender}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="직업을 입력하세요"
+              value={characterOccupation}
+              onChangeText={setCharacterOccupation}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="특징을 입력하세요"
+              value={characterCharacteristics}
+              onChangeText={setCharacterCharacteristics}
+              style={styles.input}
+            />
             <Pressable
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
-              onPress={onPressSaveEditButton}>
+              onPress={handleSaveCharacter}>
               <Text style={styles.okayButtonText}>저장하고 수정하기</Text>
             </Pressable>
             <Pressable style={styles.closeButton} onPress={onPressModalClose2}>
@@ -397,6 +453,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#000000',
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -438,14 +500,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  backButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-  },
-  backButtonImage: {
-    width: 30,
-    height: 30,
+  input: {
+    height: 40,
+    width: '100%',
+    borderColor: '#9B9AFF',
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    marginVertical: 8,
   },
 });
 
