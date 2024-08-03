@@ -90,7 +90,7 @@ const Create_7 = ({route}) => {
   const [isInitialMode, setIsInitialMode] = useState(true); // 초기 화면 여부 상태 추가
 
   // 사용자명 상태 변수
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('눈송이'); // 더미데이터로 '눈송이' 설정
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -293,6 +293,7 @@ const Create_7 = ({route}) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
+            <Text style={styles.modalTitle}>이노블과 함께한 소설</Text>
             <ScrollView showsVerticalScrollIndicator={true}>
               {isInitialMode && !isEditing ? (
                 <Text style={styles.modalTextStyle}>{recommendedNovel}</Text>
@@ -313,7 +314,7 @@ const Create_7 = ({route}) => {
                     {backgroundColor: okayButtonColor},
                   ]}
                   onPress={onPressOkayButton}>
-                  <Text style={styles.buttonText}>확정</Text>
+                  <Text style={styles.buttonText}>저장</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -352,14 +353,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   bottomText: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#000000',
   },
   image: {
     width: 320,
-    height: 300,
-    margin: 15,
+    height: 260,
+    margin: 30,
   },
   button: {
     bottom: 30,
@@ -374,6 +375,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   modalBackground1: {
     width: '100%',
@@ -383,15 +385,22 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: 350,
+    height: 700,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 25,
   },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
   modalTextStyle: {
     fontSize: 18,
     color: '#000000',
-    fontWeight: 'bold',
     textAlign: 'left',
     margin: 5,
   },
@@ -409,9 +418,9 @@ const styles = StyleSheet.create({
   },
   okayButton: {
     height: 40,
-    width: '40%',
-    borderRadius: 15,
-    backgroundColor: '#9B9AFF',
+    width: '30%',
+    marginTop: 20,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
