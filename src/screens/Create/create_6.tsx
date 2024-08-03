@@ -1,9 +1,19 @@
-// src/screens/Create/create_6.tsx
-
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  ScrollView,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import {OPENAI_API_KEY} from '@env'; // 수정된 부분
 
 const initialImageSource = require('../../img/Create/Create6-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
@@ -11,49 +21,74 @@ const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 비동기 함수로 AI로부터 추천받은 줄거리를 가져오기
-const fetchRecommendedPlot = async (idea: string, genre: string, topic: string, character: string) => {
-  // AI 또는 서버에서 추천받은 줄거리를 비동기적으로 가져옴
-  // 이 부분을 실제 AI API 호출로 대체
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('새로운 AI 추천 줄거리');
-    }, 1000); // 1초 후에 줄거리 반환
-  });
+const fetchRecommendedPlot = async (
+  idea: string,
+  genre: string,
+  selectedTopic: string,
+  character: string,
+) => {
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n등장인물: ${character}\n이 정보를 바탕으로 소설의 줄거리를 완전한 문장으로 작성해줘.`,
+          },
+        ],
+        max_tokens: 150,
+        temperature: 0.7,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+      },
+    );
+    return response.data.choices[0].message.content.trim();
+  } catch (error) {
+    console.error(
+      'Failed to fetch recommended plot from AI:',
+      error.response ? error.response.data : error.message,
+    );
+    throw new Error('Failed to fetch recommended plot from AI');
+  }
 };
 
-const Create_6 = ({ route }) => {
+const Create_6 = ({route}: {route: any}) => {
   const navigation = useNavigation();
-  const { novelId } = route.params; //전달받은 소설 id
+  const {novelId} = route.params;
 
-  const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
-  const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
-  const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
+  const [buttonColor1, setButtonColor1] = useState('#9B9AFF');
+  const [buttonColor2, setButtonColor2] = useState('#9B9AFF');
+  const [okayButtonColor, setOkayButtonColor] = useState('#9B9AFF');
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const [isModalVisible2, setIsModalVisible2] = useState(false);
 
-  // 저장된 데이터 변수
   const [savedIdea, setSavedIdea] = useState('');
   const [savedGenre, setSavedGenre] = useState('');
-  const [savedTopic, setSavedTopic] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState('');
   const [savedCharacter, setSavedCharacter] = useState('');
 
-  //입력한 줄거리와 선택한 줄거리 상태 변수
   const [plot, setPlot] = useState('');
   const [recommendedPlot, setRecommendedPlot] = useState('추천 받은 줄거리');
 
-  // 최초 화면 상태 변수
-  const [buttonText, setButtonText] = useState("줄거리를 추천받고 싶어요");
+  const [buttonText, setButtonText] = useState('줄거리를 추천받고 싶어요');
   const [image, setImage] = useState(initialImageSource);
-  const [bottomText, setBottomText] = useState('지금까지의 정보들을 바탕으로\n최종적인 줄거리를 추천해드립니다');
+  const [bottomText, setBottomText] = useState(
+    '지금까지의 정보들을 바탕으로\n최종적인 줄거리를 추천해드립니다',
+  );
 
-  // 사용자명 상태 변수
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userNickname');
+        const storedUserName = await AsyncStorage.getItem('userName');
         if (storedUserName) {
           setUserName(storedUserName);
         }
@@ -63,111 +98,112 @@ const Create_6 = ({ route }) => {
     };
 
     fetchUserName();
-    // 사용자명 변경을 감지하기 위한 interval 설정
-    const interval = setInterval(fetchUserName, 1000); // 1초마다 업데이트 체크
-
-    // 컴포넌트 언마운트 시 interval 클리어
+    const interval = setInterval(fetchUserName, 1000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 앞에서 저장된 데이터 호출
         const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
         const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
-        const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
+        const character = await AsyncStorage.getItem(
+          `novelCharacter_${novelId}`,
+        );
+
         if (idea !== null) {
           setSavedIdea(idea);
-          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Idea:', idea);
         }
         if (genre !== null) {
           setSavedGenre(genre);
-          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Genre:', genre);
         }
-
         if (topic !== null) {
-          setSavedTopic(topic);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Topic:', topic);
+          setSelectedTopic(topic);
         }
-
         if (character !== null) {
           setSavedCharacter(character);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
-          //console.log('Saved Character:', character);
         }
       } catch (error) {
-          console.error('Failed to load data.', error);
+        console.error('Failed to load data.', error);
       }
     };
 
     fetchData();
   }, [novelId]);
 
-  // 첫 번째 버튼 색상 변경 함수
   const handlePressButton1 = async () => {
-    setButtonColor1("#000000");
+    setButtonColor1('#000000');
     setTimeout(async () => {
-      setButtonColor1("#9B9AFF");
-      // 저장된 데이터를 사용하여 AI로부터 추천 받은 줄거리를 가져옴
+      setButtonColor1('#9B9AFF');
       try {
-        const newRecommendedPlot = await fetchRecommendedPlot(savedIdea, savedGenre, savedTopic, savedCharacter);
+        const newRecommendedPlot = await fetchRecommendedPlot(
+          savedIdea,
+          savedGenre,
+          selectedTopic,
+          savedCharacter,
+        );
         setRecommendedPlot(newRecommendedPlot);
         setIsModalVisible1(true);
       } catch (error) {
         console.error('Failed to fetch recommended plot.', error);
       }
-    }, 50); // 버튼 색상 복구
+    }, 50);
   };
 
-  // 두 번째 버튼 색상 변경 함수
   const handlePressButton2 = () => {
-    setButtonColor2("#000000");
+    setButtonColor2('#000000');
     setTimeout(() => {
-      setButtonColor2("#9B9AFF");
+      setButtonColor2('#9B9AFF');
       setIsModalVisible2(true);
-    }, 50); // 버튼 색상 복구
+    }, 50);
   };
 
-  const onPressModalClose1 = () => {
+  const onPressModalClose1 = async () => {
     setIsModalVisible1(false);
 
-    // 다시 추천받기 버튼, 이미지, 텍스트로 변경
-    setButtonText("줄거리를 다시 추천받고 싶어요");
+    setButtonText('줄거리를 다시 추천받고 싶어요');
     setImage(againImage);
-    setBottomText('추천받은 줄거리가 마음에 들지 않는다면\n줄거리를 다시 추천해드릴 수 있습니다\n창작자가 줄거리를 직접 작성할 수도 있습니다');
-  }
+    setBottomText(
+      '추천받은 줄거리가 마음에 들지 않는다면\n줄거리를 다시 추천해드릴 수 있습니다\n창작자가 줄거리를 직접 작성할 수도 있습니다',
+    );
+
+    try {
+      const newRecommendedPlot = await fetchRecommendedPlot(
+        savedIdea,
+        savedGenre,
+        selectedTopic,
+        savedCharacter,
+      );
+      setRecommendedPlot(newRecommendedPlot);
+    } catch (error) {
+      console.error('Failed to fetch new recommended plot.', error);
+    }
+  };
 
   const onPressModalClose2 = async () => {
-    //입력한 줄거리를 저장
     try {
       await AsyncStorage.setItem(`novelPlot_${novelId}`, plot);
       setIsModalVisible2(false);
-      navigation.navigate('Create_7', { novelId });
+      navigation.navigate('Create_7', {novelId});
     } catch (e) {
       console.error('Failed to save plot.', e);
     }
-  }
+  };
 
   const onPressOkayButton = async () => {
-    setOkayButtonColor("#000000");
+    setOkayButtonColor('#000000');
     setTimeout(async () => {
-      setOkayButtonColor("#9B9AFF");
-
-      //선택한 줄거리 저장
+      setOkayButtonColor('#9B9AFF');
       try {
-        await AsyncStorage.setItem(`novelPlot_${novelId}`, recommendedPlot); //id와 함께 저장
+        await AsyncStorage.setItem(`novelPlot_${novelId}`, recommendedPlot);
         setIsModalVisible1(false);
-        navigation.navigate('Create_7', { novelId }); //id 전달
+        navigation.navigate('Create_7', {novelId});
       } catch (e) {
         console.error('Failed to save plot.', e);
       }
-    }, 50); // 버튼 색상 복구
-  }
+    }, 50);
+  };
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);
@@ -176,55 +212,68 @@ const Create_6 = ({ route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{`${userName} 창작자님의 소설을 위한\n줄거리를 완성해보았어요!`}</Text>
-        <Image source={image} style={styles.image}/>
+        <Text
+          style={
+            styles.topText
+          }>{`${userName} 창작자님의 소설을 위한\n줄거리를 완성해보았어요!`}</Text>
+        <Image source={image} style={styles.image} />
         <Text style={styles.bottomText}>{bottomText}</Text>
       </View>
 
-      {/* 첫번째 버튼 */}
-      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1, bottom: 100,}]} onPress={handlePressButton1}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor1, bottom: 100}]}
+        onPress={handlePressButton1}>
         <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
-      {/* 두번째 버튼 */}
-      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor2}]} onPress={handlePressButton2}>
-        <Text style={styles.buttonText}>줄거리를 직접 작성하고 싶어요</Text>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor2, bottom: 30}]}
+        onPress={handlePressButton2}>
+        <Text style={styles.buttonText}>줄거리 직접 작성하기</Text>
       </TouchableOpacity>
 
-      {/* 첫번째 모달 */}
-      <Modal animationType="slide" visible={isModalVisible1} transparent={true}>
+      {/* 첫 번째 모달 */}
+      <Modal visible={isModalVisible1} transparent={true}>
         <View style={styles.modalBackground1}>
           <View style={styles.modalView}>
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
-              <Image source={closeImage} />
+              <Image source={closeImage} style={styles.closeButtonImage} />
             </Pressable>
-            <ScrollView showsVerticalScrollIndicator={true}>
-              <Text style={styles.modalTextStyle}>{recommendedPlot}</Text>
+            <ScrollView>
+              <Text style={styles.plotText}>{recommendedPlot}</Text>
             </ScrollView>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
-                <Text style={styles.buttonText}>확정</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
+              onPress={onPressOkayButton}>
+              <Text style={styles.buttonText}>확정</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* 두번째 모달 */}
-      <Modal animationType="slide" visible={isModalVisible2} transparent={true}>
+      {/* 두 번째 모달 */}
+      <Modal visible={isModalVisible2} transparent={true}>
         <View style={styles.modalBackground2}>
           <View style={styles.modalView2}>
             <Pressable style={styles.backButton} onPress={onPressBackButton}>
-              <Image source={backButtonImage} />
+              <Image source={backButtonImage} style={styles.backButtonImage} />
             </Pressable>
-            <Pressable style={styles.saveButton} onPress={onPressModalClose2}>
-              <Text style={styles.saveButtonText}>저장</Text>
-            </Pressable>
-            <View style={styles.innerModalView}>
-              <ScrollView showsVerticalScrollIndicator={true}>
-                <TextInput style={styles.textInput} placeholder="줄거리를 직접 작성해주세요" placeholderTextColor="#E2E1FF" maxLength={2000} multiline value={plot} onChangeText={setPlot}/>
-              </ScrollView>
-            </View>
+            <Text style={styles.modalText}>
+              작성된 줄거리를 확인한 후 저장할 수 있습니다.
+            </Text>
+            <TextInput
+              style={styles.plotInput}
+              multiline={true}
+              numberOfLines={10}
+              placeholder="줄거리를 입력하세요"
+              value={plot}
+              onChangeText={setPlot}
+            />
+            <TouchableOpacity
+              style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
+              onPress={onPressModalClose2}>
+              <Text style={styles.buttonText}>확정</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -235,126 +284,106 @@ const Create_6 = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    position: 'relative',
+    justifyContent: 'center',
   },
   centeredContent: {
-    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 50,
   },
   topText: {
-    fontSize: 25,
-    textAlign: 'center',
-    marginTop: 40,
-    color: '#000000',
-    fontWeight: 'bold',
-  },
-  bottomText: {
     fontSize: 20,
+    fontWeight: 'bold',
     textAlign: 'center',
-    color: '#000000',
+    marginBottom: 20,
   },
   image: {
     width: 300,
-    height: 300,
-    margin: 20,
+    height: 200,
+    marginBottom: 20,
+  },
+  bottomText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 40,
   },
   button: {
-    bottom: 30,
-    position: 'absolute',
-    height: 60,
-    width: '90%',
-    borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    width: 300,
+    padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute',
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
+    color: 'white',
   },
   modalBackground1: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-  },
-  modalBackground2: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#FFFFFF',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    margin: 35,
-    height: '50%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 25,
-  },
-  modalView2: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  innerModalView: {
-    width: 350,
-    height: 300,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    justifyContent: 'center',
+    width: '90%',
     padding: 20,
-  },
-  modalTextStyle: {
-    fontSize: 18,
-    color: '#000000',
-    fontWeight: 'bold',
-    textAlign: 'left',
-    margin: 5,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 7,
-    left: 6,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
   },
   closeButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    padding: 5,
-    zIndex: 1,
+    alignSelf: 'flex-end',
   },
-  saveButton: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
+  closeButtonImage: {
+    width: 20,
+    height: 20,
   },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    alignItems: 'center', // 중앙 정렬
-    justifyContent: 'center',
+  plotContainer: {
+    marginTop: 20,
     width: '100%',
   },
-  okayButton: {
-    height: 40,
-    width: '40%',
-    borderRadius: 15,
-    backgroundColor: "#9B9AFF",
-    alignItems: 'center',
-    justifyContent: 'center',
+  plotText: {
+    fontSize: 16,
+    textAlign: 'center',
   },
-  textInput: {
-    color: '#000000',
-    fontSize: 18,
-    fontWeight: 'bold',
+  okayButton: {
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalBackground2: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalView2: {
+    width: '90%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  backButtonImage: {
+    width: 20,
+    height: 20,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  plotInput: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    height: 150,
+    textAlignVertical: 'top',
   },
 });
 
