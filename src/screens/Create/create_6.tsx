@@ -7,7 +7,6 @@ import {
   Image,
   TouchableOpacity,
   Modal,
-  Pressable,
   ScrollView,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -237,9 +236,11 @@ const Create_6 = ({route}: {route: any}) => {
         <View style={styles.modalBackground1}>
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>이노블이 추천하는 줄거리</Text>
-            <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onPressModalClose1}>
               <Image source={closeImage} style={styles.closeButtonImage} />
-            </Pressable>
+            </TouchableOpacity>
             <ScrollView style={styles.plotContainer}>
               <Text style={styles.plotText}>{recommendedPlot}</Text>
             </ScrollView>
@@ -256,12 +257,12 @@ const Create_6 = ({route}: {route: any}) => {
       <Modal visible={isModalVisible2} transparent={true}>
         <View style={styles.modalBackground2}>
           <View style={styles.modalView2}>
-            <Pressable style={styles.backButton} onPress={onPressBackButton}>
-              <Image source={backButtonImage} style={styles.backButtonImage} />
-            </Pressable>
-            <Text style={styles.modalText}>
-              작성된 줄거리를 확인한 후 저장할 수 있습니다.
-            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onPressBackButton}>
+              <Image source={closeImage} style={styles.closeButtonImage} />
+            </TouchableOpacity>
+            <Text style={styles.modalText}>줄거리를 작성해주세요</Text>
             <TextInput
               style={styles.plotInput}
               multiline={true}
@@ -273,7 +274,7 @@ const Create_6 = ({route}: {route: any}) => {
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressModalClose2}>
-              <Text style={styles.buttonText}>확정</Text>
+              <Text style={styles.buttonText}>저장</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -316,14 +317,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
-    bottom: 30,
     left: '50%',
-    transform: [{translateX: -185}], // 버튼을 가운데로 이동
+    transform: [{translateX: -185}],
   },
   buttonText: {
     fontSize: 16,
     color: 'white',
-    fontWeight: 'bold', // 폰트 굵게 설정
+    fontWeight: 'bold',
   },
   modalBackground1: {
     flex: 1,
@@ -333,12 +333,12 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: '80%',
-    maxHeight: '80%', // 모달의 최대 높이 설정
+    maxHeight: '80%',
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'space-between', // 하단 버튼을 위쪽으로 밀어내기 위한 스타일
+    justifyContent: 'space-between',
   },
   modalTitle: {
     fontSize: 18,
@@ -368,12 +368,11 @@ const styles = StyleSheet.create({
     height: 40,
     width: '30%',
     padding: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
     marginTop: 20,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 20,
   },
   modalBackground2: {
     flex: 1,
@@ -382,30 +381,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView2: {
-    width: '90%',
+    width: '85%',
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  backButtonImage: {
-    width: 20,
-    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalText: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    marginTop: 30,
+    color: '#000000',
   },
   plotInput: {
-    borderColor: '#ddd',
+    borderColor: '#9B9AFF',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    height: 150,
+    borderRadius: 15,
+    padding: 20,
+    height: 200,
     textAlignVertical: 'top',
+    width: '90%',
+    marginBottom: 30,
   },
 });
 
