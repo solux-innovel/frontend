@@ -20,14 +20,8 @@ const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-// 비동기 함수로 AI로부터 추천받은 소설을 가져오기
-const fetchRecommendedNovel = async (
-  idea: string,
-  genre: string,
-  topic: string,
-  character: string,
-  plot: string,
-) => {
+// 비동기 함수로 AI로부터 소설의 각 부분을 가져오기
+const fetchNovelPart = async (part, idea, genre, topic, character, plot) => {
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -36,10 +30,10 @@ const fetchRecommendedNovel = async (
         messages: [
           {
             role: 'user',
-            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${topic}\n등장인물: ${character}\n줄거리: ${plot}\n이 정보를 바탕으로 소설의 줄거리를 작성해줘.`,
+            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${topic}\n등장인물: ${character}\n줄거리: ${plot}\n소설의 ${part}를 작성해줘. 등장인물의 대사는 따옴표로 표현해도 좋습니다.`,
           },
         ],
-        max_tokens: 300,
+        max_tokens: 1000, // 적절한 토큰 수 조정
         temperature: 0.7,
       },
       {
@@ -52,10 +46,10 @@ const fetchRecommendedNovel = async (
     return response.data.choices[0].message.content.trim();
   } catch (error) {
     console.error(
-      'Failed to fetch recommended novel from AI:',
+      `Failed to fetch ${part} from AI:`,
       error.response ? error.response.data : error.message,
     );
-    throw new Error('Failed to fetch recommended novel from AI');
+    throw new Error(`Failed to fetch ${part} from AI`);
   }
 };
 
@@ -161,6 +155,30 @@ const Create_7 = ({route}) => {
     fetchData();
   }, []);
 
+  // 소설을 완성하기 위한 함수
+  const generateFullNovel = async () => {
+    try {
+      const parts = ['시작', '중간', '결말']; // 소설의 주요 부분
+      const novelParts = await Promise.all(
+        parts.map(part =>
+          fetchNovelPart(
+            part,
+            savedIdea,
+            savedGenre,
+            savedTopic,
+            savedCharacter,
+            savedPlot,
+          ),
+        ),
+      );
+
+      const completeNovel = novelParts.join('\n\n'); // 각 부분을 합쳐서 전체 소설 작성
+      setRecommendedNovel(completeNovel);
+    } catch (error) {
+      console.error('Failed to generate the full novel.', error);
+    }
+  };
+
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton1 = async () => {
     setButtonColor1('#000000');
@@ -168,19 +186,8 @@ const Create_7 = ({route}) => {
       setButtonColor1('#9B9AFF');
       if (recommendedNovel === '추천된 소설을 먼저 확인해주세요') {
         // 처음 누를 때만 추천 소설을 가져옴
-        try {
-          const newRecommendedNovel = await fetchRecommendedNovel(
-            savedIdea,
-            savedGenre,
-            savedTopic,
-            savedCharacter,
-            savedPlot,
-          );
-          setRecommendedNovel(newRecommendedNovel);
-          setIsModalVisible1(true);
-        } catch (error) {
-          console.error('Failed to fetch recommended novel.', error);
-        }
+        await generateFullNovel();
+        setIsModalVisible1(true);
       } else {
         setIsModalVisible1(true); // 이후에는 모달만 열기
       }
