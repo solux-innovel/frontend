@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: 'center',
   },
   characterProfile: {

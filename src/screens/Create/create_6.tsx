@@ -236,16 +236,17 @@ const Create_6 = ({route}: {route: any}) => {
       <Modal visible={isModalVisible1} transparent={true}>
         <View style={styles.modalBackground1}>
           <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>이노블이 추천하는 줄거리</Text>
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} style={styles.closeButtonImage} />
             </Pressable>
-            <ScrollView>
+            <ScrollView style={styles.plotContainer}>
               <Text style={styles.plotText}>{recommendedPlot}</Text>
             </ScrollView>
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.buttonText}>확정</Text>
+              <Text style={styles.buttonText}>저장</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -285,39 +286,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   centeredContent: {
     alignItems: 'center',
-    marginBottom: 50,
   },
   topText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 25,
     textAlign: 'center',
-    marginBottom: 20,
+    color: '#000000',
+    marginTop: 40,
+    fontWeight: 'bold',
   },
   image: {
+    marginTop: 30,
     width: 300,
-    height: 200,
-    marginBottom: 20,
+    height: 240,
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 40,
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 30,
   },
   button: {
-    width: 300,
-    padding: 15,
-    borderRadius: 8,
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'absolute',
+    bottom: 30,
+    left: '50%',
+    transform: [{translateX: -185}], // 버튼을 가운데로 이동
   },
   buttonText: {
     fontSize: 16,
     color: 'white',
+    fontWeight: 'bold', // 폰트 굵게 설정
   },
   modalBackground1: {
     flex: 1,
@@ -326,18 +332,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    width: '90%',
+    width: '80%',
+    maxHeight: '80%', // 모달의 최대 높이 설정
     padding: 20,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'space-between', // 하단 버튼을 위쪽으로 밀어내기 위한 스타일
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 20,
+    color: '#000000',
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    position: 'absolute',
+    top: 12,
+    right: 10,
   },
   closeButtonImage: {
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
   },
   plotContainer: {
     marginTop: 20,
@@ -348,10 +365,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   okayButton: {
+    height: 40,
+    width: '30%',
+    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     marginTop: 20,
-    padding: 15,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalBackground2: {
     flex: 1,
