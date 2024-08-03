@@ -78,7 +78,7 @@ const Create_4 = ({route}) => {
   const [buttonText, setButtonText] = useState('주제를 추천받고 싶어요');
   const [image, setImage] = useState(initialImageSource);
   const [bottomText, setBottomText] = useState(
-    '작성 해주신 키워드와 장르를 바탕으로\n주제를 3가지 추천해드립니다',
+    '작성해주신 키워드와 장르를 바탕으로\n주제를 3가지 추천해드립니다',
   );
 
   const [userName, setUserName] = useState('');
@@ -148,6 +148,7 @@ const Create_4 = ({route}) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
+    // 아래 코드는 모달을 닫으면서 주제를 다시 추천받는 부분을 포함합니다.
     setButtonText('주제를 다시 추천받고 싶어요');
     setImage(againImage);
     setBottomText(
@@ -199,7 +200,13 @@ const Create_4 = ({route}) => {
         selectedTopic === item && styles.selectedTopicButton,
       ]}
       onPress={() => handleTopicPress(item)}>
-      <Text style={styles.topicButtonText}>{item}</Text>
+      <Text
+        style={[
+          styles.topicButtonText,
+          selectedTopic === item && styles.selectedTopicText,
+        ]}>
+        {item}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -213,14 +220,16 @@ const Create_4 = ({route}) => {
         <Image source={image} style={styles.image} />
         <Text style={styles.bottomText}>{bottomText}</Text>
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: buttonColor1}]}
+          style={[styles.recommendButton, {backgroundColor: buttonColor1}]}
           onPress={handlePressButton1}>
-          <Text style={styles.buttonText}>{buttonText}</Text>
+          <Text style={styles.recommendButtonText}>{buttonText}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: buttonColor2}]}
+          style={[styles.customButton, {backgroundColor: buttonColor2}]}
           onPress={handlePressButton2}>
-          <Text style={styles.buttonText}>직접 작성하기</Text>
+          <Text style={styles.customButtonText}>
+            주제를 직접 작성하고 싶어요
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -229,10 +238,13 @@ const Create_4 = ({route}) => {
         visible={isModalVisible1}
         transparent
         animationType="slide"
-        onRequestClose={() => setIsModalVisible1(false)}>
+        onRequestClose={onPressModalClose1}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>추천된 주제</Text>
+            <Pressable onPress={onPressModalClose1}>
+              <Image source={closeImage} style={styles.closeImage} />
+            </Pressable>
+            <Text style={styles.modalTitle}>이노블이 추천하는 주제</Text>
             <FlatList
               data={recommendedTopics}
               renderItem={renderItem}
@@ -241,11 +253,8 @@ const Create_4 = ({route}) => {
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.okayButtonText}>선택하기</Text>
+              <Text style={styles.okayButtonText}>저장</Text>
             </TouchableOpacity>
-            <Pressable onPress={onPressModalClose1}>
-              <Image source={closeImage} style={styles.closeImage} />
-            </Pressable>
           </View>
         </View>
       </Modal>
@@ -258,7 +267,10 @@ const Create_4 = ({route}) => {
         onRequestClose={onPressBackButton}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>주제를 직접 작성하기</Text>
+            <Pressable onPress={onPressBackButton}>
+              <Image source={closeImage} style={styles.closeImage} />
+            </Pressable>
+            <Text style={styles.modalTitle}>주제를 작성해주세요</Text>
             <TextInput
               style={styles.textInput}
               placeholder="주제를 입력하세요"
@@ -268,11 +280,8 @@ const Create_4 = ({route}) => {
             <TouchableOpacity
               style={[styles.saveButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressModalClose2}>
-              <Text style={styles.saveButtonText}>저장하기</Text>
+              <Text style={styles.saveButtonText}>저장</Text>
             </TouchableOpacity>
-            <Pressable onPress={onPressBackButton}>
-              <Image source={backButtonImage} style={styles.closeImage} />
-            </Pressable>
           </View>
         </View>
       </Modal>
@@ -283,36 +292,61 @@ const Create_4 = ({route}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   centeredContent: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
+    color: '#000000',
+    fontWeight: 'bold',
   },
   image: {
+    marginTop: 50,
     width: 300,
-    height: 200,
-    marginVertical: 20,
+    height: 235,
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
-    marginBottom: 20,
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 40,
   },
-  button: {
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 5,
+  recommendButton: {
+    position: 'absolute',
+    bottom: -50, // Adjust this value to move the button further up or down
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: {
-    color: '#fff',
+  recommendButtonText: {
+    color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  customButton: {
+    position: 'absolute',
+    bottom: -120, // Adjust this value to position the button directly below the recommendButton
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -322,19 +356,21 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 20,
+    padding: 40,
     alignItems: 'center',
+    position: 'relative',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 30,
+    color: '#000000',
   },
   topicButton: {
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginVertical: 5,
     backgroundColor: '#f0f0f0',
   },
@@ -344,36 +380,53 @@ const styles = StyleSheet.create({
   topicButtonText: {
     fontSize: 16,
   },
+  selectedTopicText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
   okayButton: {
+    height: 40,
+    width: '30%',
     padding: 10,
     borderRadius: 5,
-    marginVertical: 10,
+    marginVertical: 20,
+    backgroundColor: '#9B9AFF',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   okayButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
+    fontWeight: 'bold',
     fontSize: 18,
   },
   saveButton: {
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
+    height: 40,
+    width: '30%',
+    borderRadius: 20,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   textInput: {
     width: '100%',
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    borderColor: '#9B9AFF',
+    borderRadius: 15,
     marginBottom: 20,
   },
   closeImage: {
-    width: 30,
-    height: 30,
-    marginTop: 10,
+    width: 40,
+    height: 40,
+    position: 'absolute',
+    top: -30,
+    left: 115,
   },
 });
 
