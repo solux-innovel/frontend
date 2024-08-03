@@ -14,7 +14,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {OPENAI_API_KEY} from '@env';
+import {OPENAI_API_KEY} from '@env'; // Import the environment variable
 
 const initialImageSource = require('../../img/Create/Create4-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
