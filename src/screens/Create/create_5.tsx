@@ -137,7 +137,7 @@ const Create_5 = ({route}) => {
     '키워드, 장르, 주제를 바탕으로\n소설에 어울릴 만한 등장인물을 추천해드립니다',
   );
 
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('눈송이'); // 더미 데이터로 '눈송이' 사용
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -208,11 +208,14 @@ const Create_5 = ({route}) => {
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
 
+    // 버튼 텍스트와 이미지 업데이트
     setButtonText('등장인물을 다시 추천받고 싶어요');
     setImage(againImage);
     setBottomText(
       '추천받은 등장인물이 마음에 들지 않는다면\n등장인물을 다시 추천해드릴 수 있습니다\n창작자가 등장인물을 직접 작성할 수도 있습니다',
     );
+
+    // 버튼 색상은 동작하지 않으므로 그대로 둡니다.
   };
 
   const onPressModalClose2 = async () => {
@@ -265,7 +268,9 @@ const Create_5 = ({route}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>등장인물 추천</Text>
+      <Text style={styles.title}>
+        {userName} 창작자님 소설에{'\n'}등장하는 친구들이 궁금해요!
+      </Text>
       <View style={styles.imageContainer}>
         <Image source={image} style={styles.image} />
       </View>
@@ -274,7 +279,7 @@ const Create_5 = ({route}) => {
         <TouchableOpacity
           style={[styles.button, {backgroundColor: buttonColor1}]}
           onPress={handlePressButton1}>
-          <Text style={styles.buttonText}>등장인물 추천받기</Text>
+          <Text style={styles.buttonText}>{buttonText}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {backgroundColor: buttonColor2}]}
@@ -338,12 +343,6 @@ const Create_5 = ({route}) => {
           </View>
         </View>
       </Modal>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}>
-        <Image source={backButtonImage} style={styles.backButtonImage} />
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -355,37 +354,47 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
+    fontSize: 25,
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#000000',
     fontWeight: 'bold',
-    marginVertical: 20,
+    padding: 10,
   },
   imageContainer: {
     marginBottom: 20,
   },
   image: {
-    width: 200,
-    height: 200,
-    resizeMode: 'contain',
+    marginTop: 10,
+    width: 300,
+    height: 240,
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 20,
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 30,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: 'column', // 버튼을 세로로 배열합니다.
+    alignItems: 'center', // 버튼들을 가로 중앙에 위치시킵니다.
+    justifyContent: 'center',
     width: '100%',
     paddingHorizontal: 20,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    height: 60,
+    width: '100%', // 버튼 너비를 80%로 조정하여 중앙 정렬을 개선합니다.
+    borderRadius: 15,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10, // 버튼 간의 간격을 조정합니다.
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   modalOverlay: {
@@ -405,15 +414,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   okayButton: {
+    height: 40,
+    width: '30%',
+    padding: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 5,
     marginTop: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   okayButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 18,
   },
   closeButton: {
     position: 'absolute',
@@ -421,8 +435,8 @@ const styles = StyleSheet.create({
     right: 10,
   },
   closeImage: {
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
   },
   backButton: {
     position: 'absolute',

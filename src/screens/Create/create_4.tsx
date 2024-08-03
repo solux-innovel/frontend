@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     height: 235,
   },
   bottomText: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#000000',
     marginTop: 30,
