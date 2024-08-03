@@ -24,46 +24,57 @@ const backButtonImage = require('../../img/Create/BackSquare.png');
 // 비동기 함수로 AI로부터 추천받은 주제들을 가져오기
 const fetchRecommendedTopics = async (idea: string, genre: string) => {
   try {
-    // 더 상세한 프롬프트 생성
-    const prompt = `
-      당신은 창의적인 보조 역할을 맡고 있습니다.
-      다음 정보를 바탕으로:
-      - 아이디어: "${idea}"
-      - 장르: "${genre}"
+    // 3번 API 호출을 준비합니다.
+    const requests = [];
+    for (let i = 0; i < 3; i++) {
+      const prompt = `
+        당신은 창의적인 보조 역할을 맡고 있습니다.
+        다음 정보를 바탕으로:
+        - 아이디어: "${idea}"
+        - 장르: "${genre}"
+    
+        이 정보에 맞는 독창적이고 창의적인 주제 3개를 제안해 주세요. 각 주제는 한 줄로 명확히 구분되어야 합니다.
+        가능하면 상상력이 풍부하고 장르에 적합한 주제를 제안해 주세요.
+      `;
 
-      이 정보에 맞는 독창적이고 창의적인 주제 3개를 제안해 주세요. 각 주제는 한 줄로 명확히 구분되어야 합니다.
-      가능하면 상상력이 풍부하고 장르에 적합한 주제를 제안해 주세요.
-    `;
-
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [
+      requests.push(
+        axios.post(
+          'https://api.openai.com/v1/chat/completions',
           {
-            role: 'system',
-            content: '당신은 창의적인 보조 역할을 맡고 있습니다.',
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: '당신은 창의적인 보조 역할을 맡고 있습니다.',
+              },
+              {role: 'user', content: prompt},
+            ],
+            max_tokens: 200, // 상세한 응답을 위해 토큰 수 증가
+            temperature: 0.8, // 더 창의적인 결과를 위해 온도 조정
           },
-          {role: 'user', content: prompt},
-        ],
-        max_tokens: 200, // 상세한 응답을 위해 토큰 수 증가
-        temperature: 0.8, // 더 창의적인 결과를 위해 온도 조정
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-      },
-    );
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+          },
+        ),
+      );
+    }
+
+    // 모든 요청을 병렬로 실행하고 응답을 기다립니다.
+    const responses = await Promise.all(requests);
 
     // 응답에서 주제 추출 및 정리
-    const suggestedTopics = response.data.choices[0].message.content
-      .split('\n')
-      .filter(Boolean)
-      .map(topic => topic.trim());
+    const suggestedTopics = responses.flatMap(response => {
+      const topicsText = response.data.choices[0].message.content.trim();
+      return topicsText
+        .split('\n')
+        .filter(Boolean)
+        .map(topic => topic.trim());
+    });
 
-    return suggestedTopics.slice(0, 3); // 최대 3개의 주제 반환
+    return Array.from(new Set(suggestedTopics)).slice(0, 3); // 중복 제거 및 최대 3개의 주제 반환
   } catch (error) {
     console.error('주제 추천 요청에 실패했습니다.', error);
     throw new Error('주제 추천 요청에 실패했습니다.');
