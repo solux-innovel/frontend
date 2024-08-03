@@ -25,6 +25,28 @@ const GenreScreen = () => {
         borderBottomColor: 'transparent', // Ensure bottom border color is transparent
       },
     });
+
+    // Function to send genre to backend
+    const sendGenreToBackend = async () => {
+      try {
+        const page = 1; // Example page number
+        const response = await fetch(`http://10.101.38.18:8080/innovel/posts/genre?page=${page}&genre=${encodeURIComponent(genre)}`, {
+          method: 'POST',
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log('Response from backend:', data);
+      } catch (error) {
+        console.error('Error sending genre to backend:', error);
+      }
+    };
+
+    sendGenreToBackend();
+
   }, [navigation, genre]);
 
   const items = Array.from({length: 12}, (_, i) => ({

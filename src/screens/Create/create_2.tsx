@@ -55,7 +55,7 @@ const Create_2 = () => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }

@@ -45,7 +45,7 @@ const Create_7 = ({ route }) => {
   // 최초 화면 상태 변수
   const [buttonText, setButtonText] = useState("소설을 확인하고 싶어요");
   const [image, setImage] = useState(initialImageSource);
-  const [bottomText, setBottomText] = useState('지금까지 수고하셨습니다!\n눈송이 창작자님은 이노블과 함께\n소설을 창작하는 데에 성공하셨습니다!');
+  const [bottomText, setBottomText] = useState("지금까지 수고하셨습니다!\n이제 창작자님은 이노블과 함께\n소설을 창작하는 데에 성공하셨습니다!");
   const [isInitialMode, setIsInitialMode] = useState(true); // 초기 화면 여부 상태 추가
 
   // 사용자명 상태 변수
@@ -54,7 +54,7 @@ const Create_7 = ({ route }) => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }

@@ -10,11 +10,20 @@ const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
+// 장르와 영어 코드를 매핑
+const genreMapping = {
+  '판타지': 'FANTASY',
+  '로맨스': 'ROMANCE',
+  '일상': 'DAILY',
+  '스릴러': 'THRILLER',
+  'SF': 'SF'
+};
+
 // 장르 5가지 가져오기
 const fetchGenre = async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(['판타지', '로맨스', '일상', '스릴러', 'SF']);
+      resolve(Object.keys(genreMapping)); // 장르의 한국어 이름 반환
     }, 1000); // 1초 후에 장르 반환
   });
 };
@@ -43,7 +52,7 @@ const Create_3 = ({ route }) => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }
@@ -86,20 +95,23 @@ const Create_3 = ({ route }) => {
     setTimeout(async () => {
       setOkayButtonColor("#9B9AFF");
 
+      // 선택된 장르를 영어로 변환
+      const selectedGenreCode = genreMapping[selectedGenre];
+
       // 선택된 장르 저장
       try {
-        if (selectedGenre.length > 0) {
-          await AsyncStorage.setItem(`novelGenre_${novelId}`, selectedGenre); // id와 함께 저장
+        if (selectedGenreCode) {
+          await AsyncStorage.setItem(`novelGenre_${novelId}`, selectedGenreCode); // 영어 코드로 저장
           setIsModalVisible1(false);
           navigation.navigate('Create_4', { novelId }); // id 전달
         } else {
-          Alert.alert('경고','장르를 선택해주세요.');
+          Alert.alert('경고', '장르를 선택해주세요.');
         }
       } catch (e) {
         console.error('Failed to save genre.', e);
       }
     }, 50); // 버튼 색상 복구
-  }
+  };
 
   const onPressBackButton = () => {
     setIsModalVisible2(false);

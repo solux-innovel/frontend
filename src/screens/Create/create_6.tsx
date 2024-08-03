@@ -53,7 +53,7 @@ const Create_6 = ({ route }) => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }
