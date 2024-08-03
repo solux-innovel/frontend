@@ -141,7 +141,7 @@ const Create_10 = ({ route }) => {
   // 소설 데이터를 백엔드로 전송하는 함수
   const sendNovelDataToBackend = async (novelData) => {
     try {
-      const response = await fetch('http://10.101.38.18:8080/innovel/posts/save', {
+      const response = await fetch('http://192.168.35.246:8080/innovel/posts/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,14 +1,7 @@
-import React, {useState, useEffect} from 'react';
-import {
-  View,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Text,
-  Image,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, TextInput, FlatList, TouchableOpacity, StyleSheet, Text, Image, Alert } from 'react-native';
+import { API_URL } from '@env';
 
 interface SearchEntry {
   query: string;
@@ -16,27 +9,42 @@ interface SearchEntry {
   type: string; // 검색 유형 (예: 'user' 또는 'title')
 }
 
-const searchImage = require('../../img/searchImage.png');
 const magnifierImage = require('../../img/magnifier.png');
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'user' | 'title'>('user');
-  const [recentSearches, setRecentSearches] = useState<SearchEntry[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [recentSearchLogs, setRecentSearchLogs] = useState<SearchEntry[]>([]); // 최근 검색 로그 상태 추가
 
   useEffect(() => {
-    const fetchRecentSearches = async () => {
+    const fetchRecentSearchLogs = async () => {
       try {
-        const searches = await AsyncStorage.getItem('recentSearches');
-        if (searches) {
-          setRecentSearches(JSON.parse(searches));
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          Alert.alert('Error', 'User ID not found');
+          return;
+        }
+
+        const response = await fetch(`${API_URL}/innovel/search?id=${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response && response.ok) {
+          const data = await response.json();
+          setRecentSearchLogs(data); // 최근 검색 로그 상태에 저장
+        } else {
+          throw new Error('Failed to fetch recent search logs');
         }
       } catch (error) {
         console.error(error);
       }
     };
 
-    fetchRecentSearches();
+    fetchRecentSearchLogs(); // 컴포넌트 마운트 시 최근 검색 로그 조회
   }, []);
 
   const handleSearch = async (query: string) => {
@@ -44,39 +52,44 @@ const SearchScreen = () => {
       return;
     }
 
-    const date = new Date();
-    const searchEntry: SearchEntry = {
-      query,
-      date: `${date.getMonth() + 1}.${date.getDate()}`,
-      type: searchType, // 현재 검색 유형을 추가
-    };
-
     try {
-      const existingSearches = await AsyncStorage.getItem('recentSearches');
-      let searches: SearchEntry[] = existingSearches
-        ? JSON.parse(existingSearches)
-        : [];
-      searches.push(searchEntry);
-
-      if (searches.length > 5) {
-        searches = searches.slice(-5);
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Error', 'User ID not found');
+        return;
       }
 
-      await AsyncStorage.setItem('recentSearches', JSON.stringify(searches));
-      setRecentSearches(searches);
+      let response;
+      if (searchType === 'title') {
+        // 게시물 검색 API 호출
+        response = await fetch(`${API_URL}/innovel/search/posts?id=${userId}&title=${query}&page=0`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } else if (searchType === 'user') {
+        // 사용자 검색 API 호출
+        response = await fetch(`${API_URL}/innovel/search/users?username=${query}&page=0`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+      if (response && response.ok) { // response가 정의되어 있고, 응답이 성공적일 때만 처리
+        const data = await response.json();
+        setSearchResults(data.content); // 검색 결과를 상태에 저장
+      } else {
+        throw new Error('Failed to fetch search results');
+      }
     } catch (error) {
       console.error(error);
     }
 
     setSearchQuery('');
   };
-
-  const getRecentSearchWrapperStyle = () => ({
-    borderRadius: 10,
-    borderWidth: recentSearches.length > 0 ? 2 : 0, // 최소 한 개 이상일 때만 테두리가 보이도록
-    borderColor: '#BDB9FE',
-    padding: 10,
-  });
 
   return (
     <View style={styles.container}>
@@ -100,32 +113,50 @@ const SearchScreen = () => {
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder={`소설 ${searchType === 'title' ? '제목' : '유저 이름'}을 검색해주세요`}
+          placeholder={`${searchType === 'title' ? '소설 제목' : '유저 이름'}을 검색해주세요`}
           value={searchQuery}
           onChangeText={text => setSearchQuery(text)}
           onSubmitEditing={() => handleSearch(searchQuery)}
         />
       </View>
 
-      <View style={getRecentSearchWrapperStyle()}>
+      {/* 최근 검색 로그 표시 부분 */}
+      {recentSearchLogs.length > 0 && (
         <FlatList
-          data={recentSearches}
+          data={recentSearchLogs}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
-            <TouchableOpacity>
-              <View style={styles.recentSearchItem}>
-                <Text>{item.query}</Text>
-                <View style={styles.dateAndTypeWrapper}>
-                  <Text style={styles.searchTypeText}>
-                    {item.type === 'user' ? '유저 이름' : '제목'}
-                  </Text>
-                  <Text>{item.date}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+          renderItem={({ item }) => (
+            <View style={styles.searchResultItem}>
+              <Text style={styles.resultTitle}>{item.query}</Text>
+              <Text>{item.date}</Text>
+              <Text>{item.type}</Text>
+            </View>
           )}
         />
-      </View>
+      )}
+
+      {/* 검색 결과를 보여주는 부분 */}
+      {searchResults.length > 0 && (
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.searchResultItem}>
+              {searchType === 'title' ? (
+                <>
+                  <Text style={styles.resultTitle}>{item.title}</Text>
+                  <Text>{item.content}</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.resultUsername}>{item.username}</Text>
+                  <Text>{item.email}</Text>
+                </>
+              )}
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 };
@@ -181,20 +212,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingLeft: 0,
   },
-  recentSearchItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  searchResultItem: {
     paddingVertical: 10,
     borderBottomColor: '#BDB9FE',
     borderBottomWidth: 1,
   },
-  dateAndTypeWrapper: {
-    flexDirection: 'row', // 날짜와 검색 유형을 수평으로 배치
-    alignItems: 'center',
+  resultTitle: {
+    fontWeight: 'bold',
   },
-  searchTypeText: {
-    color: '#BDB9FE', // 연한 회색으로 텍스트 스타일링
-    marginRight: 10, // 날짜와 검색 유형 간의 간격 조정
+  resultUsername: {
+    fontWeight: 'bold',
   },
 });
 
