@@ -14,6 +14,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import {OPENAI_API_KEY} from '@env'; // Import the environment variable
 
 const initialImageSource = require('../../img/Create/Create4-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
@@ -40,8 +41,7 @@ const fetchRecommendedTopics = async (idea: string, genre: string) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          Authorization:
-            'Bearer sk-svcacct-8pnuZBO8Tm6GVC5VztKSBCShNN6lC5bA_KyBwmMP2sH6Bf1oE3Nbn6NhMqPxLT3BlbkFJeGFri18bB2nlEaxnoCMnxSfE-In1MxcBwnxsgQ70P3FmclCxSattg0F466oAA',
+          Authorization: `Bearer ${OPENAI_API_KEY}`, // Use environment variable
         },
       },
     );
