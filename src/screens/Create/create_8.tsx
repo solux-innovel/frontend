@@ -21,17 +21,16 @@ const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-// 비동기 함수로 AI로부터 추천받은 제목을 가져오기
-const fetchRecommendedTitle = async (
-  idea: string,
-  genre: string,
-  selectedTopic: string,
-  character: string,
-  plot: string,
-  novel: string,
+// 첫 번째 호출: 기본 제목 추천
+const fetchInitialRecommendedTitle = async (
+  idea,
+  genre,
+  selectedTopic,
+  character,
+  plot,
+  novel,
 ) => {
   try {
-    // API 호출
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -39,26 +38,70 @@ const fetchRecommendedTitle = async (
         messages: [
           {
             role: 'user',
-            content: `다음 정보를 기반으로 소설 제목을 제안해 주세요:\n\n아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n캐릭터: ${character}\n줄거리: ${plot}\n소설: ${novel}`,
+            content: `다음 정보를 기반으로 소설 제목을 제안해 주세요:\n\n아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n캐릭터: ${character}\n줄거리: ${plot}\n소설: ${novel}
+            제목 단어만을 호출하며, '새로운 제목', '새로운 제안' 등의 키워드가 포함되는 것은 금지합니다`,
           },
         ],
-        max_tokens: 10,
+        max_tokens: 30,
       },
       {
         headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`, // .env에서 가져온 API 키 사용
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
           'Content-Type': 'application/json',
         },
       },
     );
 
     // API 호출 결과에서 제목을 추출합니다.
-    const title =
+    const initialTitle =
       response.data.choices[0]?.message?.content?.trim() ||
       '새로운 AI 추천 제목';
-    return title;
+    return initialTitle;
   } catch (error) {
     console.error('제목 추천 요청에 실패했습니다.', error);
+    return '새로운 AI 추천 제목';
+  }
+};
+
+// 두 번째 호출: 첫 번째 추천 제목을 기반으로 더 관련성 높은 제목 추천
+const fetchImprovedTitle = async (
+  initialTitle,
+  idea,
+  genre,
+  selectedTopic,
+  character,
+  plot,
+  novel,
+) => {
+  try {
+    const response = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'user',
+            content: `다음 정보를 기반으로 제목을 개선해 주세요:\n\n기본 제목: ${initialTitle}\n아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n캐릭터: ${character}\n줄거리: ${plot}\n소설: ${novel}
+            제목 단어만을 호출하며, '새로운 제목', '새로운 제안' 등의 키워드가 포함되는 것은 금지합니다`,
+          },
+        ],
+        max_tokens: 50,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    // API 호출 결과에서 제목을 추출합니다.
+    const improvedTitle =
+      response.data.choices[0]?.message?.content?.trim() ||
+      '새로운 AI 추천 제목';
+    return improvedTitle;
+  } catch (error) {
+    console.error('제목 개선 요청에 실패했습니다.', error);
     return '새로운 AI 추천 제목';
   }
 };
@@ -143,7 +186,7 @@ const Create_8 = ({route}) => {
 
       // 저장된 데이터를 사용하여 AI로부터 추천 받은 제목을 가져옴
       try {
-        const newRecommendedTitle = await fetchRecommendedTitle(
+        const initialTitle = await fetchInitialRecommendedTitle(
           savedIdea,
           savedGenre,
           savedSelectedTopic,
@@ -151,7 +194,16 @@ const Create_8 = ({route}) => {
           savedPlot,
           savedNovel,
         );
-        setRecommendedTitle(newRecommendedTitle);
+        const improvedTitle = await fetchImprovedTitle(
+          initialTitle,
+          savedIdea,
+          savedGenre,
+          savedSelectedTopic,
+          savedCharacter,
+          savedPlot,
+          savedNovel,
+        );
+        setRecommendedTitle(improvedTitle);
         setIsModalVisible1(true);
       } catch (error) {
         console.error('제목 추천에 실패했습니다.', error);
@@ -180,7 +232,7 @@ const Create_8 = ({route}) => {
 
     // 다시 추천받기 버튼 클릭 시 새로운 제목을 가져옵니다.
     try {
-      const newRecommendedTitle = await fetchRecommendedTitle(
+      const initialTitle = await fetchInitialRecommendedTitle(
         savedIdea,
         savedGenre,
         savedSelectedTopic,
@@ -188,7 +240,16 @@ const Create_8 = ({route}) => {
         savedPlot,
         savedNovel,
       );
-      setRecommendedTitle(newRecommendedTitle);
+      const improvedTitle = await fetchImprovedTitle(
+        initialTitle,
+        savedIdea,
+        savedGenre,
+        savedSelectedTopic,
+        savedCharacter,
+        savedPlot,
+        savedNovel,
+      );
+      setRecommendedTitle(improvedTitle);
     } catch (error) {
       console.error('제목 추천에 실패했습니다.', error);
     }
@@ -256,7 +317,6 @@ const Create_8 = ({route}) => {
         onPress={handlePressButton2}>
         <Text style={styles.buttonText}>제목을 직접 작성할래요</Text>
       </TouchableOpacity>
-
       {/* 첫 번째 모달 */}
       <Modal animationType="slide" visible={isModalVisible1} transparent={true}>
         <View style={styles.modalBackground1}>
@@ -264,6 +324,7 @@ const Create_8 = ({route}) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
+            <Text style={styles.modalTitle}>이노블이 추천하는 제목</Text>
             <TouchableOpacity
               style={[
                 styles.titleButton,
@@ -276,7 +337,7 @@ const Create_8 = ({route}) => {
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.buttonText}>확정</Text>
+              <Text style={styles.buttonText}>저장</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -326,7 +387,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   bottomText: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#000000',
   },
@@ -348,6 +409,14 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+    marginTop: 20, // 모달 상단과 제목 사이의 공간
   },
   modalBackground1: {
     width: '100%',
@@ -362,8 +431,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalView: {
-    margin: 35,
-    height: 250,
+    margin: '10%',
+    height: 300,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 35,
@@ -413,6 +482,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 40,
+    marginBottom: 20,
   },
   textInput: {
     color: '#FFFFFF',
@@ -429,6 +500,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginTop: 40,
+    marginBottom: 20,
   },
   titleButtonText: {
     fontSize: 18,

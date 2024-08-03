@@ -20,14 +20,8 @@ const againImage = require('../../img/Create/Create_again.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
 const backButtonImage = require('../../img/Create/BackSquare.png');
 
-// 비동기 함수로 AI로부터 추천받은 소설을 가져오기
-const fetchRecommendedNovel = async (
-  idea: string,
-  genre: string,
-  topic: string,
-  character: string,
-  plot: string,
-) => {
+// 비동기 함수로 AI로부터 소설의 각 부분을 가져오기
+const fetchNovelPart = async (part, idea, genre, topic, character, plot) => {
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -36,10 +30,10 @@ const fetchRecommendedNovel = async (
         messages: [
           {
             role: 'user',
-            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${topic}\n등장인물: ${character}\n줄거리: ${plot}\n이 정보를 바탕으로 소설의 줄거리를 작성해줘.`,
+            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${topic}\n등장인물: ${character}\n줄거리: ${plot}\n소설의 ${part}를 작성해줘. 등장인물의 대사는 따옴표로 표현해도 좋습니다.`,
           },
         ],
-        max_tokens: 300,
+        max_tokens: 1000, // 적절한 토큰 수 조정
         temperature: 0.7,
       },
       {
@@ -52,10 +46,10 @@ const fetchRecommendedNovel = async (
     return response.data.choices[0].message.content.trim();
   } catch (error) {
     console.error(
-      'Failed to fetch recommended novel from AI:',
+      `Failed to fetch ${part} from AI:`,
       error.response ? error.response.data : error.message,
     );
-    throw new Error('Failed to fetch recommended novel from AI');
+    throw new Error(`Failed to fetch ${part} from AI`);
   }
 };
 
@@ -90,7 +84,7 @@ const Create_7 = ({route}) => {
   const [isInitialMode, setIsInitialMode] = useState(true); // 초기 화면 여부 상태 추가
 
   // 사용자명 상태 변수
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('눈송이'); // 더미데이터로 '눈송이' 설정
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -161,6 +155,30 @@ const Create_7 = ({route}) => {
     fetchData();
   }, []);
 
+  // 소설을 완성하기 위한 함수
+  const generateFullNovel = async () => {
+    try {
+      const parts = ['시작', '중간', '결말']; // 소설의 주요 부분
+      const novelParts = await Promise.all(
+        parts.map(part =>
+          fetchNovelPart(
+            part,
+            savedIdea,
+            savedGenre,
+            savedTopic,
+            savedCharacter,
+            savedPlot,
+          ),
+        ),
+      );
+
+      const completeNovel = novelParts.join('\n\n'); // 각 부분을 합쳐서 전체 소설 작성
+      setRecommendedNovel(completeNovel);
+    } catch (error) {
+      console.error('Failed to generate the full novel.', error);
+    }
+  };
+
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton1 = async () => {
     setButtonColor1('#000000');
@@ -168,19 +186,8 @@ const Create_7 = ({route}) => {
       setButtonColor1('#9B9AFF');
       if (recommendedNovel === '추천된 소설을 먼저 확인해주세요') {
         // 처음 누를 때만 추천 소설을 가져옴
-        try {
-          const newRecommendedNovel = await fetchRecommendedNovel(
-            savedIdea,
-            savedGenre,
-            savedTopic,
-            savedCharacter,
-            savedPlot,
-          );
-          setRecommendedNovel(newRecommendedNovel);
-          setIsModalVisible1(true);
-        } catch (error) {
-          console.error('Failed to fetch recommended novel.', error);
-        }
+        await generateFullNovel();
+        setIsModalVisible1(true);
       } else {
         setIsModalVisible1(true); // 이후에는 모달만 열기
       }
@@ -293,6 +300,7 @@ const Create_7 = ({route}) => {
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} />
             </Pressable>
+            <Text style={styles.modalTitle}>이노블과 함께한 소설</Text>
             <ScrollView showsVerticalScrollIndicator={true}>
               {isInitialMode && !isEditing ? (
                 <Text style={styles.modalTextStyle}>{recommendedNovel}</Text>
@@ -313,7 +321,7 @@ const Create_7 = ({route}) => {
                     {backgroundColor: okayButtonColor},
                   ]}
                   onPress={onPressOkayButton}>
-                  <Text style={styles.buttonText}>확정</Text>
+                  <Text style={styles.buttonText}>저장</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -352,14 +360,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   bottomText: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
     color: '#000000',
   },
   image: {
     width: 320,
-    height: 300,
-    margin: 15,
+    height: 260,
+    margin: 30,
   },
   button: {
     bottom: 30,
@@ -374,6 +382,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   modalBackground1: {
     width: '100%',
@@ -383,15 +392,22 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 35,
-    height: 350,
+    height: 700,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 25,
   },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
   modalTextStyle: {
     fontSize: 18,
     color: '#000000',
-    fontWeight: 'bold',
     textAlign: 'left',
     margin: 5,
   },
@@ -409,9 +425,9 @@ const styles = StyleSheet.create({
   },
   okayButton: {
     height: 40,
-    width: '40%',
-    borderRadius: 15,
-    backgroundColor: '#9B9AFF',
+    width: '30%',
+    marginTop: 20,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },

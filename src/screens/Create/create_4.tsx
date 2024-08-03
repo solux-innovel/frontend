@@ -14,7 +14,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {OPENAI_API_KEY} from '@env'; // Import the environment variable
+import {OPENAI_API_KEY} from '@env'; // 환경 변수 가져오기
 
 const initialImageSource = require('../../img/Create/Create4-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
@@ -24,36 +24,60 @@ const backButtonImage = require('../../img/Create/BackSquare.png');
 // 비동기 함수로 AI로부터 추천받은 주제들을 가져오기
 const fetchRecommendedTopics = async (idea: string, genre: string) => {
   try {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {role: 'system', content: 'You are a helpful assistant.'},
-          {
-            role: 'user',
-            content: `아이디어 "${idea}"와 장르 "${genre}"를 바탕으로 3가지 창의적인 주제를 추천해 주세요. 주제는 한 줄씩 나열해 주세요.`,
-          },
-        ],
-        max_tokens: 150,
-        temperature: 0.7,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENAI_API_KEY}`, // Use environment variable
-        },
-      },
-    );
+    // 3번 API 호출을 준비합니다.
+    const requests = [];
+    for (let i = 0; i < 3; i++) {
+      const prompt = `
+        당신은 창의적인 보조 역할을 맡고 있습니다.
+        다음 정보를 바탕으로:
+        - 아이디어: "${idea}"
+        - 장르: "${genre}"
+    
+        이 정보에 맞는 독창적이고 창의적인 주제 3개를 제안해 주세요. 각 주제는 한 줄로 명확히 구분되어야 합니다.
+        가능하면 상상력이 풍부하고 장르에 적합한 주제를 제안해 주세요.
+      `;
 
-    // 응답에서 주제 추출 (줄바꿈 기준으로 분리)
-    const suggestedTopics = response.data.choices[0].message.content
-      .split('\n')
-      .filter(Boolean);
-    return suggestedTopics.slice(0, 3); // 3개의 주제만 반환
+      requests.push(
+        axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: '당신은 창의적인 보조 역할을 맡고 있습니다.',
+              },
+              {role: 'user', content: prompt},
+            ],
+            max_tokens: 200, // 상세한 응답을 위해 토큰 수 증가
+            temperature: 0.8, // 더 창의적인 결과를 위해 온도 조정
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+            },
+          },
+        ),
+      );
+    }
+
+    // 모든 요청을 병렬로 실행하고 응답을 기다립니다.
+    const responses = await Promise.all(requests);
+
+    // 응답에서 주제 추출 및 정리
+    const suggestedTopics = responses.flatMap(response => {
+      const topicsText = response.data.choices[0].message.content.trim();
+      return topicsText
+        .split('\n')
+        .filter(Boolean)
+        .map(topic => topic.trim());
+    });
+
+    return Array.from(new Set(suggestedTopics)).slice(0, 3); // 중복 제거 및 최대 3개의 주제 반환
   } catch (error) {
-    console.error('Failed to fetch recommended topics.', error);
-    throw new Error('Failed to fetch recommended topics.');
+    console.error('주제 추천 요청에 실패했습니다.', error);
+    throw new Error('주제 추천 요청에 실패했습니다.');
   }
 };
 
@@ -78,7 +102,7 @@ const Create_4 = ({route}) => {
   const [buttonText, setButtonText] = useState('주제를 추천받고 싶어요');
   const [image, setImage] = useState(initialImageSource);
   const [bottomText, setBottomText] = useState(
-    '작성 해주신 키워드와 장르를 바탕으로\n주제를 3가지 추천해드립니다',
+    '작성해주신 키워드와 장르를 바탕으로\n주제를 3가지 추천해드립니다',
   );
 
   const [userName, setUserName] = useState('');
@@ -91,7 +115,7 @@ const Create_4 = ({route}) => {
           setUserName(storedUserName);
         }
       } catch (error) {
-        console.error('Failed to fetch user name.', error);
+        console.error('사용자 이름 가져오기 실패.', error);
       }
     };
 
@@ -113,7 +137,7 @@ const Create_4 = ({route}) => {
           setSavedGenre(genre);
         }
       } catch (error) {
-        console.error('Failed to load data.', error);
+        console.error('데이터 로드 실패.', error);
       }
     };
 
@@ -133,7 +157,7 @@ const Create_4 = ({route}) => {
         setRecommendedTopics(newRecommendedTopics);
         setIsModalVisible1(true);
       } catch (error) {
-        console.error('Failed to fetch recommended topics.', error);
+        console.error('주제 추천 요청에 실패했습니다.', error);
       }
     }, 50);
   };
@@ -148,6 +172,7 @@ const Create_4 = ({route}) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
+    // 모달을 닫으면서 주제를 다시 추천받는 부분 포함
     setButtonText('주제를 다시 추천받고 싶어요');
     setImage(againImage);
     setBottomText(
@@ -161,7 +186,7 @@ const Create_4 = ({route}) => {
       setIsModalVisible2(false);
       navigation.navigate('Create_5', {novelId});
     } catch (e) {
-      console.error('Failed to save topic.', e);
+      console.error('주제 저장 실패.', e);
     }
   };
 
@@ -176,7 +201,7 @@ const Create_4 = ({route}) => {
           setIsModalVisible1(false);
           navigation.navigate('Create_5', {novelId});
         } catch (e) {
-          console.error('Failed to save topic.', e);
+          console.error('주제 저장 실패.', e);
         }
       } else {
         Alert.alert('경고', '주제를 선택해주세요.');
@@ -199,7 +224,13 @@ const Create_4 = ({route}) => {
         selectedTopic === item && styles.selectedTopicButton,
       ]}
       onPress={() => handleTopicPress(item)}>
-      <Text style={styles.topicButtonText}>{item}</Text>
+      <Text
+        style={[
+          styles.topicButtonText,
+          selectedTopic === item && styles.selectedTopicText,
+        ]}>
+        {item}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -213,14 +244,16 @@ const Create_4 = ({route}) => {
         <Image source={image} style={styles.image} />
         <Text style={styles.bottomText}>{bottomText}</Text>
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: buttonColor1}]}
+          style={[styles.recommendButton, {backgroundColor: buttonColor1}]}
           onPress={handlePressButton1}>
-          <Text style={styles.buttonText}>{buttonText}</Text>
+          <Text style={styles.recommendButtonText}>{buttonText}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, {backgroundColor: buttonColor2}]}
+          style={[styles.customButton, {backgroundColor: buttonColor2}]}
           onPress={handlePressButton2}>
-          <Text style={styles.buttonText}>직접 작성하기</Text>
+          <Text style={styles.customButtonText}>
+            주제를 직접 작성하고 싶어요
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -229,10 +262,13 @@ const Create_4 = ({route}) => {
         visible={isModalVisible1}
         transparent
         animationType="slide"
-        onRequestClose={() => setIsModalVisible1(false)}>
+        onRequestClose={onPressModalClose1}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>추천된 주제</Text>
+            <Pressable onPress={onPressModalClose1}>
+              <Image source={closeImage} style={styles.closeImage} />
+            </Pressable>
+            <Text style={styles.modalTitle}>이노블이 추천하는 주제</Text>
             <FlatList
               data={recommendedTopics}
               renderItem={renderItem}
@@ -241,11 +277,8 @@ const Create_4 = ({route}) => {
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.okayButtonText}>선택하기</Text>
+              <Text style={styles.okayButtonText}>저장</Text>
             </TouchableOpacity>
-            <Pressable onPress={onPressModalClose1}>
-              <Image source={closeImage} style={styles.closeImage} />
-            </Pressable>
           </View>
         </View>
       </Modal>
@@ -258,7 +291,10 @@ const Create_4 = ({route}) => {
         onRequestClose={onPressBackButton}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>주제를 직접 작성하기</Text>
+            <Pressable onPress={onPressBackButton}>
+              <Image source={closeImage} style={styles.closeImage} />
+            </Pressable>
+            <Text style={styles.modalTitle}>주제를 작성해주세요</Text>
             <TextInput
               style={styles.textInput}
               placeholder="주제를 입력하세요"
@@ -268,11 +304,8 @@ const Create_4 = ({route}) => {
             <TouchableOpacity
               style={[styles.saveButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressModalClose2}>
-              <Text style={styles.saveButtonText}>저장하기</Text>
+              <Text style={styles.saveButtonText}>저장</Text>
             </TouchableOpacity>
-            <Pressable onPress={onPressBackButton}>
-              <Image source={backButtonImage} style={styles.closeImage} />
-            </Pressable>
           </View>
         </View>
       </Modal>
@@ -283,36 +316,61 @@ const Create_4 = ({route}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   centeredContent: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   topText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 25,
     textAlign: 'center',
+    marginTop: 40,
+    color: '#000000',
+    fontWeight: 'bold',
   },
   image: {
+    marginTop: 50,
     width: 300,
-    height: 200,
-    marginVertical: 20,
+    height: 235,
   },
   bottomText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 5,
-  },
-  buttonText: {
-    color: '#fff',
     fontSize: 18,
+    textAlign: 'center',
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 40,
+  },
+  recommendButton: {
+    position: 'absolute',
+    bottom: -50, // 이 값을 조정하여 버튼의 위치를 조정하세요
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recommendButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  customButton: {
+    position: 'absolute',
+    bottom: -120, // 이 값을 조정하여 버튼의 위치를 조정하세요
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
+    backgroundColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -322,19 +380,21 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 40,
     alignItems: 'center',
+    position: 'relative',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 30,
+    color: '#000000',
   },
   topicButton: {
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginVertical: 5,
     backgroundColor: '#f0f0f0',
   },
@@ -344,36 +404,53 @@ const styles = StyleSheet.create({
   topicButtonText: {
     fontSize: 16,
   },
+  selectedTopicText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
   okayButton: {
+    height: 40,
+    width: '30%',
     padding: 10,
     borderRadius: 5,
-    marginVertical: 10,
+    marginVertical: 20,
+    backgroundColor: '#9B9AFF',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   okayButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
+    fontWeight: 'bold',
     fontSize: 18,
   },
   saveButton: {
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
+    height: 40,
+    width: '30%',
+    borderRadius: 20,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   textInput: {
     width: '100%',
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    borderColor: '#9B9AFF',
+    borderRadius: 15,
     marginBottom: 20,
   },
   closeImage: {
-    width: 30,
-    height: 30,
-    marginTop: 10,
+    width: 40,
+    height: 40,
+    position: 'absolute',
+    top: -30,
+    left: 115,
   },
 });
 

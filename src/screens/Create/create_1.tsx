@@ -1,8 +1,8 @@
 // src/screens/Create/create_1.tsx
 
-import React, { useState, useEffect } from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create1_image.png');
@@ -10,10 +10,10 @@ const imageSource = require('../../img/Create/Create1_image.png');
 const Create_1 = () => {
   const navigation = useNavigation();
 
-  const [buttonColor, setButtonColor] = useState("#9B9AFF");
+  const [buttonColor, setButtonColor] = useState('#9B9AFF');
 
   // 사용자명 상태 변수
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('눈송이');
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -37,9 +37,9 @@ const Create_1 = () => {
 
   // 버튼 색상 변경 함수
   const handlePress = () => {
-    setButtonColor("#000000");
+    setButtonColor('#000000');
     setTimeout(() => {
-      setButtonColor("#9B9AFF");
+      setButtonColor('#9B9AFF');
       navigation.navigate('Create_2');
     }, 50); // 버튼 색상 복구
   };
@@ -47,11 +47,16 @@ const Create_1 = () => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{`${userName} 창작자님,\n반가워요🙌`}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{'지금부터 이노블과 함께\n소설 창작하기를 시작해볼까요?'}</Text>
+        <Text
+          style={styles.topText}>{`${userName} 창작자님,\n반가워요 🙌`}</Text>
+        <Image source={imageSource} style={styles.image} />
+        <Text style={styles.bottomText}>
+          {'지금부터 이노블과 함께\n소설 창작하기를 시작해볼까요?'}
+        </Text>
       </View>
-      <TouchableOpacity  style={[styles.button, {backgroundColor: buttonColor}]} onPress={handlePress}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor}]}
+        onPress={handlePress}>
         <Text style={styles.buttonText}>소설 창작 시작하기</Text>
       </TouchableOpacity>
     </View>
@@ -91,13 +96,14 @@ const styles = StyleSheet.create({
     height: 60,
     width: '90%',
     borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
