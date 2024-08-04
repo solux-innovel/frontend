@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, TextInput, FlatList, TouchableOpacity, StyleSheet, Text, Image, Alert } from 'react-native';
-import { API_URL } from '@env';
 
 interface SearchEntry {
   query: string;
@@ -11,46 +10,27 @@ interface SearchEntry {
 
 const magnifierImage = require('../../img/magnifier.png');
 
+// 이메일을 부분적으로 숨기는 함수
+const maskEmail = (email: string): string => {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) return email; // 이메일 형식이 잘못된 경우 원본 이메일 반환
+
+  // localPart의 길이에 따라 처리
+  const visibleLength = 3;
+  if (localPart.length <= visibleLength) return email; // 길이가 3 이하인 경우 원본 이메일 반환
+
+  // 이메일 앞부분을 3글자만 남기고 나머지는 *로 대체
+  const maskedLocalPart = `${localPart.slice(0, visibleLength)}${'*'.repeat(localPart.length - visibleLength)}`;
+  return `${maskedLocalPart}@${domain}`;
+};
+
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'user' | 'title'>('user');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [recentSearchLogs, setRecentSearchLogs] = useState<SearchEntry[]>([]); // 최근 검색 로그 상태 추가
-
-  useEffect(() => {
-    const fetchRecentSearchLogs = async () => {
-      try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          Alert.alert('Error', 'User ID not found');
-          return;
-        }
-
-        const response = await fetch(`${API_URL}/innovel/search?id=${userId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response && response.ok) {
-          const data = await response.json();
-          setRecentSearchLogs(data); // 최근 검색 로그 상태에 저장
-        } else {
-          throw new Error('Failed to fetch recent search logs');
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchRecentSearchLogs(); // 컴포넌트 마운트 시 최근 검색 로그 조회
-  }, []);
 
   const handleSearch = async (query: string) => {
-    if (query.trim() === '') {
-      return;
-    }
+    if (query.trim() === '') return;
 
     try {
       const userId = await AsyncStorage.getItem('userId');
@@ -59,50 +39,50 @@ const SearchScreen = () => {
         return;
       }
 
-      let response;
-      if (searchType === 'title') {
-        // 게시물 검색 API 호출
-        response = await fetch(`${API_URL}/innovel/search/posts?id=${userId}&title=${query}&page=0`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      } else if (searchType === 'user') {
-        // 사용자 검색 API 호출
-        response = await fetch(`${API_URL}/innovel/search/users?username=${query}&page=0`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      }
+      const url = searchType === 'title'
+        ? `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/posts?id=${userId}&title=${query}&page=0`
+        : `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/users?username=${query}&page=0`;
 
-      if (response && response.ok) { // response가 정의되어 있고, 응답이 성공적일 때만 처리
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response && response.ok) {
         const data = await response.json();
-        setSearchResults(data.content); // 검색 결과를 상태에 저장
+        setSearchResults(data.content || []);
       } else {
-        throw new Error('Failed to fetch search results');
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch search results: ${errorText}`);
       }
     } catch (error) {
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', `Failed to fetch search results: ${errorMessage}`);
+      console.error('Search error:', error);
     }
 
     setSearchQuery('');
   };
 
+  const handleTabChange = (type: 'user' | 'title') => {
+    setSearchType(type);
+    setSearchResults([]); // 탭 변경 시 검색 결과를 초기화
+    setSearchQuery(''); // 검색 쿼리도 초기화
+  };
+
   return (
     <View style={styles.container}>
-      {/* 검색 유형 선택 탭 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, searchType === 'user' && styles.activeTab]}
-          onPress={() => setSearchType('user')}>
+          onPress={() => handleTabChange('user')}>
           <Text style={searchType === 'user' ? styles.activeTabText : styles.tabText}>유저 검색</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, searchType === 'title' && styles.activeTab]}
-          onPress={() => setSearchType('title')}>
+          onPress={() => handleTabChange('title')}>
           <Text style={searchType === 'title' ? styles.activeTabText : styles.tabText}>제목 검색</Text>
         </TouchableOpacity>
       </View>
@@ -120,22 +100,6 @@ const SearchScreen = () => {
         />
       </View>
 
-      {/* 최근 검색 로그 표시 부분 */}
-      {recentSearchLogs.length > 0 && (
-        <FlatList
-          data={recentSearchLogs}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.searchResultItem}>
-              <Text style={styles.resultTitle}>{item.query}</Text>
-              <Text>{item.date}</Text>
-              <Text>{item.type}</Text>
-            </View>
-          )}
-        />
-      )}
-
-      {/* 검색 결과를 보여주는 부분 */}
       {searchResults.length > 0 && (
         <FlatList
           data={searchResults}
@@ -150,7 +114,7 @@ const SearchScreen = () => {
               ) : (
                 <>
                   <Text style={styles.resultUsername}>{item.username}</Text>
-                  <Text>{item.email}</Text>
+                  <Text>{maskEmail(item.email)}</Text>
                 </>
               )}
             </View>
