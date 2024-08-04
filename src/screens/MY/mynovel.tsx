@@ -3,9 +3,36 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Modal, Pressable, Button, TextInput, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//import { API_URL } from '@env';
 
 const thumbnailImage = require('../../img/My/Thumbnail.png');
 const closeImage = require('../../img/Create/CloseSquare.png');
+
+async function addRecentPost(postId) {
+    try {
+        const response = await fetch('https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/posts/recent-read/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                postId: postId
+            }).toString() // URLSearchParams를 문자열로 변환
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Failed to add recent read:', response.statusText);
+            console.error('Error Response Text:', errorText);
+            throw new Error('Failed to add recent read');
+        }
+
+        // 요청이 성공했음을 알리고 상태 업데이트
+        console.log('Successfully added recent read');
+    } catch (error) {
+        console.error('Error adding recent read:', error.message);
+    }
+}
 
 const MyNovel = () => {
   const [novels, setNovels] = useState([]);
@@ -37,7 +64,7 @@ const MyNovel = () => {
 
   const fetchNovels = async (userId: string) => {
     try {
-      const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost?socialId=${userId}`, {
+      const response = await fetch(`https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/mypage/mypost?socialId=${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +158,7 @@ const MyNovel = () => {
 
 
   try {
-    const response = await fetch(`http://10.101.38.18:8080/innovel/posts/${novel.id}`, {
+    const response = await fetch(`https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/posts/${novel.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -146,6 +173,11 @@ const MyNovel = () => {
       setTitle(responseData.title);
       setGenre(Array.isArray(responseData.genre) ? responseData.genre.join(', ') : responseData.genre || '');
       setNovelContent(responseData.content);
+
+            // 최근 읽은 소설로 추가
+            if (novel.id) {
+                await addRecentPost(novel.id);
+            }
     } else {
       console.error('Failed to fetch detailed novel data from backend');
     }
@@ -185,7 +217,7 @@ const handleSave = async () => {
     };
 
     // 소설 데이터를 백엔드에 전송
-    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+    const response = await fetch(`https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/mypage/mypost/${selectedNovel.id}`, {
       method: 'PUT', // 데이터 업데이트를 위한 HTTP 메서드
       headers: {
         'Content-Type': 'application/json',
@@ -210,7 +242,7 @@ const handleSave = async () => {
   const handleDelete = async () => {
   try {
     // Delete request to the backend with the novel ID
-    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+    const response = await fetch(`https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/mypage/mypost/${selectedNovel.id}`, {
       method: 'DELETE', // DELETE method for deleting resources
       headers: {
         'Content-Type': 'application/json',

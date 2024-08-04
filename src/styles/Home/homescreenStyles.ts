@@ -72,4 +72,45 @@ export default StyleSheet.create({
     height: 24,
     marginRight: '50%',
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    zIndex: 1,
+  },
+  modalThumbnail: {
+    width: 200,
+    height: 270,
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    color: '#000000',
+    fontWeight: 'bold',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  modalGenre: {
+    fontSize: 18,
+    color: '#000000',
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    color: '#000000',
+    marginBottom: 15,
+  },
 });

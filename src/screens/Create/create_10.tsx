@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//import { API_URL } from '@env';
 
 const imageSource = require('../../img/Create/Create10_image.png');
 
@@ -141,7 +142,7 @@ const Create_10 = ({ route }) => {
   // 소설 데이터를 백엔드로 전송하는 함수
   const sendNovelDataToBackend = async (novelData) => {
     try {
-      const response = await fetch('http://10.101.38.18:8080/innovel/posts/save', {
+      const response = await fetch(`https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/posts/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
