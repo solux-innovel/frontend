@@ -1,17 +1,5 @@
-// src/screens/Create/create_10.tsx
-
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {useNavigation, CommonActions} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -19,7 +7,7 @@ const imageSource = require('../../img/Create/Create10_image.png');
 
 const Create_10 = ({route}) => {
   const navigation = useNavigation();
-  const {novelId} = route.params; //전달받은 소설 id
+  const {novelId} = route.params; // 전달받은 소설 id
 
   const [buttonColor, setButtonColor] = useState('#9B9AFF');
 
@@ -98,50 +86,42 @@ const Create_10 = ({route}) => {
 
         if (idea !== null) {
           setSavedIdea(idea);
-          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Idea:', idea);
         }
 
         if (genre !== null) {
           setSavedGenre(genre);
-          // AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Genre:', genre);
         }
 
         if (topic !== null) {
           setSavedTopic(topic);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Topic:', topic);
         }
 
         if (character !== null) {
           setSavedCharacter(character);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Character:', character);
         }
 
         if (plot !== null) {
           setSavedPlot(plot);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Plot:', plot);
         }
 
         if (novel !== null) {
           setSavedNovel(novel);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Novel:', novel);
         }
 
         if (title !== null) {
           setSavedTitle(title);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Title:', title);
         }
 
         if (thumbnail !== null) {
           const parsedThumbnail = JSON.parse(thumbnail);
           setSavedThumbnail(parsedThumbnail);
-          //AI 추천 기능에 사용하고 싶다면 여기에서 AI 호출
           console.log('Saved Thumbnail:', parsedThumbnail);
         }
       } catch (error) {
@@ -152,40 +132,12 @@ const Create_10 = ({route}) => {
     fetchData();
   }, [novelId]);
 
-  // 소설 데이터를 백엔드로 전송하는 함수
-  const sendNovelDataToBackend = async novelData => {
-    try {
-      const response = await fetch(
-        'http://10.101.38.18:8080/innovel/posts/save',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(novelData),
-        },
-      );
-
-      if (!response.ok) {
-        const responseText = await response.text(); // 응답 본문을 텍스트로 변환
-        console.error('Response Status:', response.status); // 응답 상태 코드 출력
-        console.error('Response Text:', responseText); // 응답 본문 출력
-        throw new Error('Failed to send novel data to backend');
-      }
-
-      console.log('Novel data sent to backend successfully.');
-    } catch (error) {
-      console.error('Error sending novel data to backend:', error);
-    }
-  };
-
-  {
-    /*
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton = async () => {
-    setButtonColor("#000000");
+    setButtonColor('#000000');
     setTimeout(async () => {
-      setButtonColor("#9B9AFF");
+      setButtonColor('#9B9AFF');
+
       // 전달할 데이터 객체 생성
       const novelData = {
         id: novelId,
@@ -198,52 +150,13 @@ const Create_10 = ({route}) => {
         title: savedTitle,
         thumbnail: savedThumbnail,
       };
+
+      // 데이터 저장
       try {
-        // 데이터 저장
-        await AsyncStorage.setItem(`novelData_${novelId}`, JSON.stringify(novelData));
-
-        // currentNovelId 초기화
-        await AsyncStorage.removeItem('currentNovelId');
-
-        // 홈 화면으로 이동
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              { name: 'Main', state: { routes: [{ name: 'Home' }] } },
-            ],
-          })
+        await AsyncStorage.setItem(
+          `novelData_${novelId}`,
+          JSON.stringify(novelData),
         );
-      } catch (error) {
-        console.error('Failed to save novel data.', error);
-      }
-    }, 50); // 버튼 색상 복구
-  };
-  */
-  }
-
-  // 첫 번째 버튼 색상 변경 함수
-  const handlePressButton = async () => {
-    setButtonColor('#000000');
-    setTimeout(async () => {
-      setButtonColor('#9B9AFF');
-
-      // 전달할 데이터 객체 생성
-      const novelData = {
-        socialId: userId, // AsyncStorage에서 가져온 사용자 ID
-        title: savedTitle,
-        genre: savedGenre,
-        content: savedNovel,
-      };
-
-      // 전송할 데이터 객체 로그에 출력
-      console.log('Novel Data to be sent:', novelData);
-
-      try {
-        // 백엔드로 데이터 전송
-        await sendNovelDataToBackend(novelData);
-
-        // currentNovelId 초기화
         await AsyncStorage.removeItem('currentNovelId');
 
         // 홈 화면으로 이동
