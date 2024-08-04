@@ -1,17 +1,27 @@
 // src/screens/Create/create_10.tsx
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  ScrollView,
+} from 'react-native';
+import {useNavigation, CommonActions} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const imageSource = require('../../img/Create/Create10_image.png');
 
-const Create_10 = ({ route }) => {
+const Create_10 = ({route}) => {
   const navigation = useNavigation();
-  const { novelId } = route.params;  //전달받은 소설 id
+  const {novelId} = route.params; //전달받은 소설 id
 
-  const [buttonColor, setButtonColor] = useState("#9B9AFF");
+  const [buttonColor, setButtonColor] = useState('#9B9AFF');
 
   // 저장된 데이터 변수
   const [savedIdea, setSavedIdea] = useState('');
@@ -76,11 +86,15 @@ const Create_10 = ({ route }) => {
         const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
         const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
-        const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
-        const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
-        const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
-        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`)
-        const thumbnail = await AsyncStorage.getItem(`novelThumbnail_${novelId}`)
+        const character = await AsyncStorage.getItem(
+          `novelCharacter_${novelId}`,
+        );
+        const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`);
+        const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`);
+        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`);
+        const thumbnail = await AsyncStorage.getItem(
+          `novelThumbnail_${novelId}`,
+        );
 
         if (idea !== null) {
           setSavedIdea(idea);
@@ -131,7 +145,7 @@ const Create_10 = ({ route }) => {
           console.log('Saved Thumbnail:', parsedThumbnail);
         }
       } catch (error) {
-          console.error('Failed to load data.', error);
+        console.error('Failed to load data.', error);
       }
     };
 
@@ -139,21 +153,24 @@ const Create_10 = ({ route }) => {
   }, [novelId]);
 
   // 소설 데이터를 백엔드로 전송하는 함수
-  const sendNovelDataToBackend = async (novelData) => {
+  const sendNovelDataToBackend = async novelData => {
     try {
-      const response = await fetch('http://10.101.38.18:8080/innovel/posts/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'http://10.101.38.18:8080/innovel/posts/save',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(novelData),
         },
-        body: JSON.stringify(novelData),
-      });
+      );
 
       if (!response.ok) {
-      const responseText = await response.text(); // 응답 본문을 텍스트로 변환
-      console.error('Response Status:', response.status); // 응답 상태 코드 출력
-      console.error('Response Text:', responseText); // 응답 본문 출력
-      throw new Error('Failed to send novel data to backend');
+        const responseText = await response.text(); // 응답 본문을 텍스트로 변환
+        console.error('Response Status:', response.status); // 응답 상태 코드 출력
+        console.error('Response Text:', responseText); // 응답 본문 출력
+        throw new Error('Failed to send novel data to backend');
       }
 
       console.log('Novel data sent to backend successfully.');
@@ -162,7 +179,8 @@ const Create_10 = ({ route }) => {
     }
   };
 
-  {/*
+  {
+    /*
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton = async () => {
     setButtonColor("#000000");
@@ -201,24 +219,25 @@ const Create_10 = ({ route }) => {
       }
     }, 50); // 버튼 색상 복구
   };
-  */}
+  */
+  }
 
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton = async () => {
-    setButtonColor("#000000");
+    setButtonColor('#000000');
     setTimeout(async () => {
-      setButtonColor("#9B9AFF");
+      setButtonColor('#9B9AFF');
 
       // 전달할 데이터 객체 생성
       const novelData = {
-        socialId: userId,    // AsyncStorage에서 가져온 사용자 ID
+        socialId: userId, // AsyncStorage에서 가져온 사용자 ID
         title: savedTitle,
         genre: savedGenre,
         content: savedNovel,
       };
 
-    // 전송할 데이터 객체 로그에 출력
-    console.log('Novel Data to be sent:', novelData);
+      // 전송할 데이터 객체 로그에 출력
+      console.log('Novel Data to be sent:', novelData);
 
       try {
         // 백엔드로 데이터 전송
@@ -231,10 +250,8 @@ const Create_10 = ({ route }) => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [
-              { name: 'Main', state: { routes: [{ name: 'Home' }] } },
-            ],
-          })
+            routes: [{name: 'Main', state: {routes: [{name: 'Home'}]}}],
+          }),
         );
       } catch (error) {
         console.error('Failed to save novel data.', error);
@@ -245,13 +262,21 @@ const Create_10 = ({ route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{`${userName} 창작자님이 창작한\n소설을 발행하는 데에 성공했습니다!`}</Text>
-        <Image source={imageSource} style={styles.image}/>
-        <Text style={styles.bottomText}>{`소설을 발행하신 것을 축하드립니다!\n앞으로도 ${userName} 창작자님의 소설 창작을\n이노블이 열심히 응원하고 돕겠습니다`}</Text>
+        <Text
+          style={
+            styles.topText
+          }>{`${userName} 창작자님이 창작한\n소설을 발행하는 데에 성공했습니다!`}</Text>
+        <Image source={imageSource} style={styles.image} />
+        <Text
+          style={
+            styles.bottomText
+          }>{`소설을 발행하신 것을 축하드립니다!\n앞으로도 ${userName} 창작자님의 소설 창작을\n이노블이 열심히 응원하고 돕겠습니다`}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
-      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor}]} onPress={handlePressButton}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor}]}
+        onPress={handlePressButton}>
         <Text style={styles.buttonText}>저장하고 홈 화면으로 돌아가기</Text>
       </TouchableOpacity>
     </View>
@@ -292,7 +317,7 @@ const styles = StyleSheet.create({
     height: 60,
     width: '90%',
     borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
