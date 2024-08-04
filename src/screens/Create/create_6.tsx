@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     transform: [{translateX: -185}],
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 18,
     color: 'white',
     fontWeight: 'bold',
   },
