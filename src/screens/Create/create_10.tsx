@@ -132,6 +132,31 @@ const Create_10 = ({route}) => {
     fetchData();
   }, [novelId]);
 
+  // 소설 데이터를 백엔드로 전송하는 함수
+  const sendNovelDataToBackend = async (novelData) => {
+    try {
+      const response = await fetch('http://192.168.35.246:8080/innovel/posts/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novelData),
+      });
+
+      if (!response.ok) {
+      const responseText = await response.text(); // 응답 본문을 텍스트로 변환
+      console.error('Response Status:', response.status); // 응답 상태 코드 출력
+      console.error('Response Text:', responseText); // 응답 본문 출력
+      throw new Error('Failed to send novel data to backend');
+      }
+
+      console.log('Novel data sent to backend successfully.');
+    } catch (error) {
+      console.error('Error sending novel data to backend:', error);
+    }
+  };
+
+
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton = async () => {
     setButtonColor('#000000');

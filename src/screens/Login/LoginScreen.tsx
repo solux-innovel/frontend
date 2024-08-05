@@ -22,6 +22,7 @@ import {
   getProfile as getKakaoProfile,
 } from '@react-native-seoul/kakao-login';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 const androidKeys = {
   consumerKey: 'Wx_9q1TN5D2SRBHpzqTt',
@@ -66,18 +67,17 @@ const LoginScreen: React.FC = () => {
       console.log('email:', email);
 
       // 백엔드 서버에 사용자 정보 전송
-      const response = await fetch(
-        'http://10.0.2.2:8080/api/users/kakao-login',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch('https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+
           body: JSON.stringify({
             id: id,
             nickname: nickname,
             email: email,
           }),
+
         },
       );
 
@@ -110,8 +110,7 @@ const LoginScreen: React.FC = () => {
         console.log('사용자 프로필:', profile);
 
         // 사용자 프로필을 백엔드로 전송, 이 부분 url 업데이트 필요
-        const response = await fetch(
-          'http://10.101.38.18:8080/innovel/users/login',
+        const response = await fetch('https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/users/login',
           {
             method: 'POST',
             headers: {

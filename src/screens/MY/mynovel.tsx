@@ -185,7 +185,7 @@ const handleSave = async () => {
     };
 
     // 소설 데이터를 백엔드에 전송
-    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+    const response = await fetch(`http://192.168.35.246:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
       method: 'PUT', // 데이터 업데이트를 위한 HTTP 메서드
       headers: {
         'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ const handleSave = async () => {
   const handleDelete = async () => {
   try {
     // Delete request to the backend with the novel ID
-    const response = await fetch(`http://10.101.38.18:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
+    const response = await fetch(`http://192.168.35.246:8080/innovel/mypage/mypost/${selectedNovel.id}`, {
       method: 'DELETE', // DELETE method for deleting resources
       headers: {
         'Content-Type': 'application/json',

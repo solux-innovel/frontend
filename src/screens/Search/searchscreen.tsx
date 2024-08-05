@@ -1,14 +1,6 @@
-import React, {useState, useEffect} from 'react';
-import {
-  View,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Text,
-  Image,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, TextInput, FlatList, TouchableOpacity, StyleSheet, Text, Image, Alert } from 'react-native';
 
 interface SearchEntry {
   query: string;
@@ -16,80 +8,81 @@ interface SearchEntry {
   type: string; // 검색 유형 (예: 'user' 또는 'title')
 }
 
-const searchImage = require('../../img/searchImage.png');
 const magnifierImage = require('../../img/magnifier.png');
+
+// 이메일을 부분적으로 숨기는 함수
+const maskEmail = (email: string): string => {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) return email; // 이메일 형식이 잘못된 경우 원본 이메일 반환
+
+  // localPart의 길이에 따라 처리
+  const visibleLength = 3;
+  if (localPart.length <= visibleLength) return email; // 길이가 3 이하인 경우 원본 이메일 반환
+
+  // 이메일 앞부분을 3글자만 남기고 나머지는 *로 대체
+  const maskedLocalPart = `${localPart.slice(0, visibleLength)}${'*'.repeat(localPart.length - visibleLength)}`;
+  return `${maskedLocalPart}@${domain}`;
+};
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'user' | 'title'>('user');
-  const [recentSearches, setRecentSearches] = useState<SearchEntry[]>([]);
-
-  useEffect(() => {
-    const fetchRecentSearches = async () => {
-      try {
-        const searches = await AsyncStorage.getItem('recentSearches');
-        if (searches) {
-          setRecentSearches(JSON.parse(searches));
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchRecentSearches();
-  }, []);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const handleSearch = async (query: string) => {
-    if (query.trim() === '') {
-      return;
-    }
-
-    const date = new Date();
-    const searchEntry: SearchEntry = {
-      query,
-      date: `${date.getMonth() + 1}.${date.getDate()}`,
-      type: searchType, // 현재 검색 유형을 추가
-    };
+    if (query.trim() === '') return;
 
     try {
-      const existingSearches = await AsyncStorage.getItem('recentSearches');
-      let searches: SearchEntry[] = existingSearches
-        ? JSON.parse(existingSearches)
-        : [];
-      searches.push(searchEntry);
-
-      if (searches.length > 5) {
-        searches = searches.slice(-5);
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        Alert.alert('Error', 'User ID not found');
+        return;
       }
 
-      await AsyncStorage.setItem('recentSearches', JSON.stringify(searches));
-      setRecentSearches(searches);
+      const url = searchType === 'title'
+        ? `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/posts?id=${userId}&title=${query}&page=0`
+        : `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/users?username=${query}&page=0`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response && response.ok) {
+        const data = await response.json();
+        setSearchResults(data.content || []);
+      } else {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch search results: ${errorText}`);
+      }
     } catch (error) {
-      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      Alert.alert('Error', `Failed to fetch search results: ${errorMessage}`);
+      console.error('Search error:', error);
     }
 
     setSearchQuery('');
   };
 
-  const getRecentSearchWrapperStyle = () => ({
-    borderRadius: 10,
-    borderWidth: recentSearches.length > 0 ? 2 : 0, // 최소 한 개 이상일 때만 테두리가 보이도록
-    borderColor: '#BDB9FE',
-    padding: 10,
-  });
+  const handleTabChange = (type: 'user' | 'title') => {
+    setSearchType(type);
+    setSearchResults([]); // 탭 변경 시 검색 결과를 초기화
+    setSearchQuery(''); // 검색 쿼리도 초기화
+  };
 
   return (
     <View style={styles.container}>
-      {/* 검색 유형 선택 탭 */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, searchType === 'user' && styles.activeTab]}
-          onPress={() => setSearchType('user')}>
+          onPress={() => handleTabChange('user')}>
           <Text style={searchType === 'user' ? styles.activeTabText : styles.tabText}>유저 검색</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, searchType === 'title' && styles.activeTab]}
-          onPress={() => setSearchType('title')}>
+          onPress={() => handleTabChange('title')}>
           <Text style={searchType === 'title' ? styles.activeTabText : styles.tabText}>제목 검색</Text>
         </TouchableOpacity>
       </View>
@@ -100,32 +93,34 @@ const SearchScreen = () => {
         </TouchableOpacity>
         <TextInput
           style={styles.searchInput}
-          placeholder={`소설 ${searchType === 'title' ? '제목' : '유저 이름'}을 검색해주세요`}
+          placeholder={`${searchType === 'title' ? '소설 제목' : '유저 이름'}을 검색해주세요`}
           value={searchQuery}
           onChangeText={text => setSearchQuery(text)}
           onSubmitEditing={() => handleSearch(searchQuery)}
         />
       </View>
 
-      <View style={getRecentSearchWrapperStyle()}>
+      {searchResults.length > 0 && (
         <FlatList
-          data={recentSearches}
+          data={searchResults}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
-            <TouchableOpacity>
-              <View style={styles.recentSearchItem}>
-                <Text>{item.query}</Text>
-                <View style={styles.dateAndTypeWrapper}>
-                  <Text style={styles.searchTypeText}>
-                    {item.type === 'user' ? '유저 이름' : '제목'}
-                  </Text>
-                  <Text>{item.date}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+          renderItem={({ item }) => (
+            <View style={styles.searchResultItem}>
+              {searchType === 'title' ? (
+                <>
+                  <Text style={styles.resultTitle}>{item.title}</Text>
+                  <Text>{item.content}</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.resultUsername}>{item.username}</Text>
+                  <Text>{maskEmail(item.email)}</Text>
+                </>
+              )}
+            </View>
           )}
         />
-      </View>
+      )}
     </View>
   );
 };
@@ -181,20 +176,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingLeft: 0,
   },
-  recentSearchItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  searchResultItem: {
     paddingVertical: 10,
     borderBottomColor: '#BDB9FE',
     borderBottomWidth: 1,
   },
-  dateAndTypeWrapper: {
-    flexDirection: 'row', // 날짜와 검색 유형을 수평으로 배치
-    alignItems: 'center',
+  resultTitle: {
+    fontWeight: 'bold',
   },
-  searchTypeText: {
-    color: '#BDB9FE', // 연한 회색으로 텍스트 스타일링
-    marginRight: 10, // 날짜와 검색 유형 간의 간격 조정
+  resultUsername: {
+    fontWeight: 'bold',
   },
 });
 
