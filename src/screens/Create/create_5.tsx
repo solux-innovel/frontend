@@ -67,41 +67,64 @@ const fetchRecommendedTopics = async (idea, genre) => {
 // API 호출로 등장인물 프로필 추출하기
 const extractCharacterProfiles = async (story, topic) => {
   try {
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {role: 'system', content: 'You are a helpful assistant.'},
+    // 5번 API 호출을 준비합니다.
+    const requests = [];
+    for (let i = 0; i < 5; i++) {
+      requests.push(
+        axios.post(
+          'https://api.openai.com/v1/chat/completions',
           {
-            role: 'user',
-            content: `다음 이야기를 바탕으로 등장인물의 프로필을 단답형으로 제공해 주세요. 각 프로필은 다음 형식으로 출력되어야 합니다:\n이름: [이름]\n나이: [나이]\n성별: [성별]\n직업: [직업]\n특징: [특징]\n\n줄거리를 포함하지 말고, 단답형으로만 작성해 주세요.\n\n이야기:\n\n${story}\n\n주제: ${topic}`,
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {role: 'system', content: 'You are a helpful assistant.'},
+              {
+                role: 'user',
+                content: `다음 이야기를 바탕으로 등장인물의 프로필을 단답형으로 제공해 주세요. 각 프로필은 다음 형식으로 출력되어야 합니다:\n이름: [이름]\n나이: [나이]\n성별: [성별]\n직업: [직업]\n특징: [특징]\n\n줄거리를 포함하지 말고, 단답형으로만 작성해 주세요.\n\n이야기:\n\n${story}\n\n주제: ${topic}\n\n아이디어, 장르, 주제, 스토리와 관련이 깊은 등장인물 3명을 추천해 주세요.`,
+              },
+            ],
+            max_tokens: 300, // 각 응답이 충분히 포함할 수 있도록 적절한 토큰 수 설정
+            temperature: 0.7, // 창의적인 응답을 유도하기 위한 온도 설정
           },
-        ],
-        max_tokens: 500,
-        temperature: 0.5,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`, // .env에서 가져온 API 키를 사용합니다.
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+          {
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`, // .env에서 가져온 API 키를 사용합니다.
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+    }
 
-    const profilesText = response.data.choices[0].message.content.trim();
-    const profiles = profilesText.split('\n\n').map(profileText => {
-      const lines = profileText.split('\n');
-      return {
-        name: lines[0]?.replace('이름: ', '').trim() || '',
-        age: lines[1]?.replace('나이: ', '').trim() || '',
-        gender: lines[2]?.replace('성별: ', '').trim() || '',
-        occupation: lines[3]?.replace('직업: ', '').trim() || '',
-        characteristics: lines[4]?.replace('특징: ', '').trim() || '',
-      };
+    // 모든 요청을 병렬로 실행하고 응답을 기다립니다.
+    const responses = await Promise.all(requests);
+
+    // 응답에서 프로필 추출
+    const profiles = responses.flatMap(response => {
+      const profilesText = response.data.choices[0].message.content.trim();
+      return profilesText
+        .split('\n\n')
+        .map(profileText => {
+          const lines = profileText.split('\n');
+          if (lines.length === 5) {
+            // 프로필 형식이 정확한지 확인
+            return {
+              name: lines[0]?.replace('이름: ', '').trim() || '',
+              age: lines[1]?.replace('나이: ', '').trim() || '',
+              gender: lines[2]?.replace('성별: ', '').trim() || '',
+              occupation: lines[3]?.replace('직업: ', '').trim() || '',
+              characteristics: lines[4]?.replace('특징: ', '').trim() || '',
+            };
+          }
+          return null;
+        })
+        .filter(profile => profile !== null);
     });
 
-    return profiles;
+    // 중복된 프로필 제거 및 최대 3개의 프로필 반환
+    const uniqueProfiles = Array.from(
+      new Set(profiles.map(profile => JSON.stringify(profile))),
+    ).map(profile => JSON.parse(profile));
+    return uniqueProfiles.slice(0, 3); // 최대 3개의 프로필 반환
   } catch (error) {
     if (error.response) {
       console.error('API Error:', error.response.data);
@@ -131,13 +154,19 @@ const Create_5 = ({route}) => {
   const [topic, setTopic] = useState('');
   const [recommendedCharacters, setRecommendedCharacters] = useState([]);
 
+  const [characterName, setCharacterName] = useState('');
+  const [characterAge, setCharacterAge] = useState('');
+  const [characterGender, setCharacterGender] = useState('');
+  const [characterOccupation, setCharacterOccupation] = useState('');
+  const [characterCharacteristics, setCharacterCharacteristics] = useState('');
+
   const [buttonText, setButtonText] = useState('등장인물을 추천받고 싶어요');
   const [image, setImage] = useState(initialImageSource);
   const [bottomText, setBottomText] = useState(
     '키워드, 장르, 주제를 바탕으로\n소설에 어울릴 만한 등장인물을 추천해드립니다',
   );
 
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('눈송이'); // 더미 데이터로 '눈송이' 사용
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -208,11 +237,14 @@ const Create_5 = ({route}) => {
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
 
+    // 버튼 텍스트와 이미지 업데이트
     setButtonText('등장인물을 다시 추천받고 싶어요');
     setImage(againImage);
     setBottomText(
       '추천받은 등장인물이 마음에 들지 않는다면\n등장인물을 다시 추천해드릴 수 있습니다\n창작자가 등장인물을 직접 작성할 수도 있습니다',
     );
+
+    // 버튼 색상은 동작하지 않으므로 그대로 둡니다.
   };
 
   const onPressModalClose2 = async () => {
@@ -263,9 +295,29 @@ const Create_5 = ({route}) => {
     }, 50);
   };
 
+  const handleSaveCharacter = () => {
+    const newCharacter = {
+      name: characterName,
+      age: characterAge,
+      gender: characterGender,
+      occupation: characterOccupation,
+      characteristics: characterCharacteristics,
+    };
+
+    setRecommendedCharacters([...recommendedCharacters, newCharacter]);
+    setCharacterName('');
+    setCharacterAge('');
+    setCharacterGender('');
+    setCharacterOccupation('');
+    setCharacterCharacteristics('');
+    setIsModalVisible2(false);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>등장인물 추천</Text>
+      <Text style={styles.title}>
+        {userName} 창작자님 소설에{'\n'}등장하는 친구들이 궁금해요!
+      </Text>
       <View style={styles.imageContainer}>
         <Image source={image} style={styles.image} />
       </View>
@@ -274,12 +326,14 @@ const Create_5 = ({route}) => {
         <TouchableOpacity
           style={[styles.button, {backgroundColor: buttonColor1}]}
           onPress={handlePressButton1}>
-          <Text style={styles.buttonText}>등장인물 추천받기</Text>
+          <Text style={styles.buttonText}>{buttonText}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, {backgroundColor: buttonColor2}]}
           onPress={handlePressButton2}>
-          <Text style={styles.buttonText}>등장인물 직접 작성하기</Text>
+          <Text style={styles.buttonText}>
+            등장인물을 직접 작성하고 싶어요.
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -309,7 +363,7 @@ const Create_5 = ({route}) => {
             <Pressable
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.okayButtonText}>확인</Text>
+              <Text style={styles.okayButtonText}>저장</Text>
             </Pressable>
             <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
               <Image source={closeImage} style={styles.closeImage} />
@@ -326,10 +380,40 @@ const Create_5 = ({route}) => {
         onRequestClose={() => setIsModalVisible2(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text>등장인물을 직접 작성해 주세요.</Text>
+            <Text style={styles.modalTitle}>등장인물을 작성해 주세요</Text>
+            <TextInput
+              placeholder="이름을 입력하세요"
+              value={characterName}
+              onChangeText={setCharacterName}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="나이를 입력하세요"
+              value={characterAge}
+              onChangeText={setCharacterAge}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="성별을 입력하세요"
+              value={characterGender}
+              onChangeText={setCharacterGender}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="직업을 입력하세요"
+              value={characterOccupation}
+              onChangeText={setCharacterOccupation}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="특징을 입력하세요"
+              value={characterCharacteristics}
+              onChangeText={setCharacterCharacteristics}
+              style={styles.input}
+            />
             <Pressable
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
-              onPress={onPressSaveEditButton}>
+              onPress={handleSaveCharacter}>
               <Text style={styles.okayButtonText}>저장하고 수정하기</Text>
             </Pressable>
             <Pressable style={styles.closeButton} onPress={onPressModalClose2}>
@@ -338,12 +422,6 @@ const Create_5 = ({route}) => {
           </View>
         </View>
       </Modal>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}>
-        <Image source={backButtonImage} style={styles.backButtonImage} />
-      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -355,38 +433,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
+    fontSize: 25,
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#000000',
     fontWeight: 'bold',
-    marginVertical: 20,
+    padding: 10,
   },
   imageContainer: {
     marginBottom: 20,
   },
   image: {
-    width: 200,
-    height: 200,
-    resizeMode: 'contain',
+    marginTop: 10,
+    width: 300,
+    height: 240,
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 20,
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 30,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: 'column', // 버튼을 세로로 배열합니다.
+    alignItems: 'center', // 버튼들을 가로 중앙에 위치시킵니다.
+    justifyContent: 'center',
     width: '100%',
     paddingHorizontal: 20,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+    height: 60,
+    width: '100%', // 버튼 너비를 80%로 조정하여 중앙 정렬을 개선합니다.
+    borderRadius: 15,
+    backgroundColor: '#9B9AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10, // 버튼 간의 간격을 조정합니다.
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#000000',
   },
   modalOverlay: {
     flex: 1,
@@ -398,22 +492,27 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: 'center',
   },
   characterProfile: {
     marginBottom: 10,
   },
   okayButton: {
+    height: 40,
+    width: '30%',
+    padding: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 5,
     marginTop: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   okayButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 18,
   },
   closeButton: {
     position: 'absolute',
@@ -421,17 +520,17 @@ const styles = StyleSheet.create({
     right: 10,
   },
   closeImage: {
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
   },
-  backButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-  },
-  backButtonImage: {
-    width: 30,
-    height: 30,
+  input: {
+    height: 40,
+    width: '100%',
+    borderColor: '#9B9AFF',
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    marginVertical: 8,
   },
 });
 

@@ -1,15 +1,26 @@
 // src/screens/LoginScreen.tsx
 
 import React, {useContext, useEffect, useState} from 'react';
-import {View,Text,Image,TouchableOpacity,StyleSheet, Alert,
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import axios from 'axios';
 import {AuthContext} from '../../navigation/AppNavigator';
-import NaverLogin, {NaverLoginResponse,GetProfileResponse,
+import NaverLogin, {
+  NaverLoginResponse,
+  GetProfileResponse,
 } from '@react-native-seoul/naver-login';
-import {login as kakaoLogin,getProfile as getKakaoProfile,} from '@react-native-seoul/kakao-login';
+import {
+  login as kakaoLogin,
+  getProfile as getKakaoProfile,
+} from '@react-native-seoul/kakao-login';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 
@@ -60,13 +71,15 @@ const LoginScreen: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+
+          body: JSON.stringify({
+            id: id,
+            nickname: nickname,
+            email: email,
+          }),
+
         },
-        body: JSON.stringify({
-          id: id,
-          nickname: nickname,
-          email: email,
-        }),
-      });
+      );
 
       await AsyncStorage.setItem('userId', String(id));
       await AsyncStorage.setItem('userNickname', nickname);
@@ -112,7 +125,10 @@ const LoginScreen: React.FC = () => {
         );
 
         await AsyncStorage.setItem('userId', String(profile.response.id));
-        await AsyncStorage.setItem('userNickname', String(profile.response.nickname));
+        await AsyncStorage.setItem(
+          'userNickname',
+          String(profile.response.nickname),
+        );
         await AsyncStorage.setItem('userEmail', profile.response.email);
 
         if (response.status === 200) {
@@ -200,13 +216,15 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   button: {
-    width: '95%',
-    height: 50,
-    marginVertical: 10,
+    width: '90%',
+    height: 60,
+    marginVertical: 8,
+    borderRadius: 40,
   },
   buttonImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 15,
   },
   textContainer: {
     flexDirection: 'row',
