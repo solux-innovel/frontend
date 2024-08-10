@@ -1,4 +1,5 @@
 // src/screens/Create/create_10.tsx
+//0810 수정
 
 import React, {useEffect, useState} from 'react';
 import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
