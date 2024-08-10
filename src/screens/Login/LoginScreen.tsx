@@ -79,6 +79,7 @@ const LoginScreen: React.FC = () => {
           }),
 
         },
+      },
       );
 
       await AsyncStorage.setItem('userId', String(id));

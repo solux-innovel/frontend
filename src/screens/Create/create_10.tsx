@@ -1,3 +1,5 @@
+// src/screens/Create/create_10.tsx
+
 import React, {useEffect, useState} from 'react';
 import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {useNavigation, CommonActions} from '@react-navigation/native';

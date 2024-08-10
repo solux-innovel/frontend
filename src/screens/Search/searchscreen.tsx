@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from 'react';
+//search screen.tsx
+import React, { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, TextInput, FlatList, TouchableOpacity, StyleSheet, Text, Image, Alert } from 'react-native';
-
-interface SearchEntry {
-  query: string;
-  date: string;
-  type: string; // 검색 유형 (예: 'user' 또는 'title')
-}
 
 const magnifierImage = require('../../img/magnifier.png');
 
@@ -41,7 +36,7 @@ const SearchScreen = () => {
 
       const url = searchType === 'title'
         ? `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/posts?id=${userId}&title=${query}&page=0`
-        : `https://7d32-2406-5900-10e6-8026-ecdd-f031-868d-fc14.ngrok-free.app/innovel/search/users?username=${query}&page=0`;
+        : `https://7d32-2406-5900-10e6-8026-ecdd-fc14.ngrok-free.app/innovel/search/users?username=${query}&page=0`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -53,13 +48,22 @@ const SearchScreen = () => {
       if (response && response.ok) {
         const data = await response.json();
         setSearchResults(data.content || []);
+
+        // 검색 결과가 없으면 Alert 표시
+        if (data.content.length === 0) {
+          Alert.alert('검색 결과', '검색 결과가 없습니다');
+        }
       } else {
         const errorText = await response.text();
         throw new Error(`Failed to fetch search results: ${errorText}`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      Alert.alert('Error', `Failed to fetch search results: ${errorMessage}`);
+      if (errorMessage.includes('JSON Parse error')) {
+        Alert.alert('검색 결과', '검색 결과가 없습니다');
+      } else {
+        Alert.alert('Error', `Failed to fetch search results: ${errorMessage}`);
+      }
       console.error('Search error:', error);
     }
 
