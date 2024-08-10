@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 0,
+    backgroundColor: '#FFFFFF', // 배경색을 흰색으로 설정
   },
   logo: {
     width: '95%',
