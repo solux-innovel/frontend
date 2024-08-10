@@ -14,7 +14,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import OPENAI_API_KEY from '@env'; // .env에서 API 키를 가져옵니다.
+import {OPENAI_API_KEY} from '@env'; // .env에서 API 키를 가져옵니다.
 
 const initialImageSource = require('../../img/Create/Create5-1_image.png');
 const againImage = require('../../img/Create/Create_again.png');
