@@ -1,12 +1,30 @@
 // src/screens/Create/create_9.tsx
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  ScrollView,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // AI로부터 추천받은 이미지를 가져오는 비동기 함수
-const fetchAICoverImage = async (idea: string, genre: string, topic: string, character: string, plot: string, novel: string, title: string) => {
+const fetchAICoverImage = async (
+  idea: string,
+  genre: string,
+  topic: string,
+  character: string,
+  plot: string,
+  novel: string,
+  title: string,
+) => {
   try {
     // AI 추천 이미지를 가져오는 API 호출
     // 여기서는 예시로 기존에 있던 이미지 URL을 사용
@@ -16,7 +34,9 @@ const fetchAICoverImage = async (idea: string, genre: string, topic: string, cha
     //const newImageUri = data.imageUri;
 
     // 예시로 로컬 이미지 추가
-    const newImageUri = Image.resolveAssetSource(require('../../img/Create/Create9-2_image.png')).uri;
+    const newImageUri = Image.resolveAssetSource(
+      require('../../img/Create/Create9-2_image.png'),
+    ).uri;
 
     // 이미지 경로를 업데이트
     //setImagePaths([...imagePaths, { uri: newImageUri }]);
@@ -27,12 +47,12 @@ const fetchAICoverImage = async (idea: string, genre: string, topic: string, cha
   }
 };
 
-const Create_9 = ({ route }) => {
+const Create_9 = ({route}) => {
   const navigation = useNavigation();
-  const { novelId } = route.params;  //전달받은 소설 id
+  const {novelId} = route.params; //전달받은 소설 id
 
-  const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
-  const [buttonColor2, setButtonColor2] = useState("#9B9AFF");
+  const [buttonColor1, setButtonColor1] = useState('#9B9AFF');
+  const [buttonColor2, setButtonColor2] = useState('#9B9AFF');
 
   // 현재 이미지의 경로를 관리
   const [currentImagePath, setCurrentImagePath] = useState(null);
@@ -53,10 +73,12 @@ const Create_9 = ({ route }) => {
         const idea = await AsyncStorage.getItem(`novelIdea_${novelId}`);
         const genre = await AsyncStorage.getItem(`novelGenre_${novelId}`);
         const topic = await AsyncStorage.getItem(`novelTopic_${novelId}`);
-        const character = await AsyncStorage.getItem(`novelCharacter_${novelId}`)
-        const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`)
-        const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`)
-        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`)
+        const character = await AsyncStorage.getItem(
+          `novelCharacter_${novelId}`,
+        );
+        const plot = await AsyncStorage.getItem(`novelPlot_${novelId}`);
+        const novel = await AsyncStorage.getItem(`finalNovel_${novelId}`);
+        const title = await AsyncStorage.getItem(`novelTitle_${novelId}`);
 
         if (idea !== null) {
           setSavedIdea(idea);
@@ -101,14 +123,26 @@ const Create_9 = ({ route }) => {
         }
 
         // 저장된 내용을 바탕으로 AI 추천 이미지를 가져와서 설정
-        const initialImageUri = await fetchAICoverImage(savedIdea, savedGenre, savedTopic, savedCharacter, savedPlot, savedNovel, savedTitle);
+        const initialImageUri = await fetchAICoverImage(
+          savedIdea,
+          savedGenre,
+          savedTopic,
+          savedCharacter,
+          savedPlot,
+          savedNovel,
+          savedTitle,
+        );
         if (initialImageUri) {
           setCurrentImagePath(initialImageUri);
         } else {
-          setCurrentImagePath(Image.resolveAssetSource(require('../../img/Create/Create9-1_image.png')).uri);
+          setCurrentImagePath(
+            Image.resolveAssetSource(
+              require('../../img/Create/Create9-1_image.png'),
+            ).uri,
+          );
         }
       } catch (error) {
-          console.error('Failed to load data.', error);
+        console.error('Failed to load data.', error);
       }
     };
 
@@ -117,9 +151,9 @@ const Create_9 = ({ route }) => {
 
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton1 = async () => {
-    setButtonColor1("#000000");
+    setButtonColor1('#000000');
     setTimeout(async () => {
-      setButtonColor1("#9B9AFF");
+      setButtonColor1('#9B9AFF');
       const newImageUri = await fetchAICoverImage();
       if (newImageUri) {
         setCurrentImagePath(newImageUri);
@@ -132,14 +166,17 @@ const Create_9 = ({ route }) => {
 
   // 두 번째 버튼 색상 변경 함수
   const handlePressButton2 = async () => {
-    setButtonColor2("#000000");
+    setButtonColor2('#000000');
     setTimeout(async () => {
-      setButtonColor2("#9B9AFF");
+      setButtonColor2('#9B9AFF');
       try {
         if (currentImagePath) {
-          await AsyncStorage.setItem(`novelThumbnail_${novelId}`, JSON.stringify(currentImagePath));
+          await AsyncStorage.setItem(
+            `novelThumbnail_${novelId}`,
+            JSON.stringify(currentImagePath),
+          );
           //console.log(JSON.stringify(currentImagePath))
-          navigation.navigate('Create_10', { novelId });
+          navigation.navigate('Create_10', {novelId});
         } else {
           alert('이미지 저장 실패');
         }
@@ -152,18 +189,30 @@ const Create_9 = ({ route }) => {
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text style={styles.topText}>{'거의 다 왔습니다!\n소설의 표지를 추천해드릴게요!'}</Text>
-        {currentImagePath && <Image source={{ uri: currentImagePath }} style={styles.image}/>}
-        <Text style={styles.bottomText}>{'소설과 어울리는 표지를 추천합니다!\n표지를 다시 추천받을 수도 있고\n마음에 든다면 그대로 발행할 수 있습니다'}</Text>
+        <Text style={styles.topText}>
+          {'거의 다 왔습니다!\n소설의 표지를 추천해드릴게요!'}
+        </Text>
+        {currentImagePath && (
+          <Image source={{uri: currentImagePath}} style={styles.image} />
+        )}
+        <Text style={styles.bottomText}>
+          {
+            '소설과 어울리는 표지를 추천합니다!\n표지를 다시 추천받을 수도 있고\n마음에 든다면 그대로 발행할 수 있습니다'
+          }
+        </Text>
       </View>
 
       {/* 첫번째 버튼 */}
-      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1, bottom: 100,}]} onPress={handlePressButton1}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor1, bottom: 100}]}
+        onPress={handlePressButton1}>
         <Text style={styles.buttonText}>표지를 다시 추천받고 싶어요</Text>
       </TouchableOpacity>
 
       {/* 두번째 버튼 */}
-      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor2}]} onPress={handlePressButton2}>
+      <TouchableOpacity
+        style={[styles.button, {backgroundColor: buttonColor2}]}
+        onPress={handlePressButton2}>
         <Text style={styles.buttonText}>소설을 발행하고 싶어요</Text>
       </TouchableOpacity>
     </View>
@@ -204,13 +253,14 @@ const styles = StyleSheet.create({
     height: 60,
     width: '90%',
     borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

@@ -7,7 +7,6 @@ import {
   Image,
   TouchableOpacity,
   Modal,
-  Pressable,
   ScrollView,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -28,6 +27,7 @@ const fetchRecommendedPlot = async (
   character: string,
 ) => {
   try {
+    // 아이디어, 장르, 주제, 등장인물에 대한 상세한 질문을 포함하여 줄거리 요청
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -35,10 +35,16 @@ const fetchRecommendedPlot = async (
         messages: [
           {
             role: 'user',
-            content: `아이디어: ${idea}\n장르: ${genre}\n주제: ${selectedTopic}\n등장인물: ${character}\n이 정보를 바탕으로 소설의 줄거리를 완전한 문장으로 작성해줘.`,
+            content: `다음 정보들을 바탕으로 소설의 줄거리를 작성해 주세요. 줄거리는 아래의 요소들을 포함하며, 문장이 자연스럽고 완전하게 끝나도록 해 주세요:
+              1. 아이디어: ${idea}
+              2. 장르: ${genre}
+              3. 주제: ${selectedTopic}
+              4. 등장인물: ${character}
+              
+              줄거리는 다음 육하원칙(누가, 언제, 어디서, 무엇을, 왜, 어떻게)을 포함해야 합니다. 이야기의 흐름이 자연스럽고 일관되게 유지되며, 문장이 끊기지 않고 완전하게 끝맺어지도록 작성해 주세요. 문장들이 매끄럽게 이어지도록 해 주세요.`,
           },
         ],
-        max_tokens: 150,
+        max_tokens: 1000, // 더 긴 줄거리를 요청
         temperature: 0.7,
       },
       {
@@ -236,16 +242,19 @@ const Create_6 = ({route}: {route: any}) => {
       <Modal visible={isModalVisible1} transparent={true}>
         <View style={styles.modalBackground1}>
           <View style={styles.modalView}>
-            <Pressable style={styles.closeButton} onPress={onPressModalClose1}>
+            <Text style={styles.modalTitle}>이노블이 추천하는 줄거리</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onPressModalClose1}>
               <Image source={closeImage} style={styles.closeButtonImage} />
-            </Pressable>
-            <ScrollView>
+            </TouchableOpacity>
+            <ScrollView style={styles.plotContainer}>
               <Text style={styles.plotText}>{recommendedPlot}</Text>
             </ScrollView>
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressOkayButton}>
-              <Text style={styles.buttonText}>확정</Text>
+              <Text style={styles.buttonText}>저장</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -255,12 +264,12 @@ const Create_6 = ({route}: {route: any}) => {
       <Modal visible={isModalVisible2} transparent={true}>
         <View style={styles.modalBackground2}>
           <View style={styles.modalView2}>
-            <Pressable style={styles.backButton} onPress={onPressBackButton}>
-              <Image source={backButtonImage} style={styles.backButtonImage} />
-            </Pressable>
-            <Text style={styles.modalText}>
-              작성된 줄거리를 확인한 후 저장할 수 있습니다.
-            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onPressBackButton}>
+              <Image source={closeImage} style={styles.closeButtonImage} />
+            </TouchableOpacity>
+            <Text style={styles.modalText}>줄거리를 작성해주세요</Text>
             <TextInput
               style={styles.plotInput}
               multiline={true}
@@ -272,7 +281,7 @@ const Create_6 = ({route}: {route: any}) => {
             <TouchableOpacity
               style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
               onPress={onPressModalClose2}>
-              <Text style={styles.buttonText}>확정</Text>
+              <Text style={styles.buttonText}>저장</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -285,39 +294,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   centeredContent: {
     alignItems: 'center',
-    marginBottom: 50,
   },
   topText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 25,
     textAlign: 'center',
-    marginBottom: 20,
+    color: '#000000',
+    marginTop: 40,
+    fontWeight: 'bold',
   },
   image: {
+    marginTop: 30,
     width: 300,
-    height: 200,
-    marginBottom: 20,
+    height: 240,
   },
   bottomText: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 40,
+    color: '#000000',
+    marginTop: 30,
+    marginBottom: 30,
   },
   button: {
-    width: 300,
-    padding: 15,
-    borderRadius: 8,
+    height: 60,
+    width: '90%',
+    borderRadius: 15,
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'absolute',
+    left: '50%',
+    transform: [{translateX: -185}],
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 18,
     color: 'white',
+    fontWeight: 'bold',
   },
   modalBackground1: {
     flex: 1,
@@ -326,18 +339,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    width: '90%',
+    width: '80%',
+    maxHeight: '80%',
     padding: 20,
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 20,
+    color: '#000000',
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    position: 'absolute',
+    top: 12,
+    right: 10,
   },
   closeButtonImage: {
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
   },
   plotContainer: {
     marginTop: 20,
@@ -348,10 +372,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   okayButton: {
+    height: 40,
+    width: '30%',
+    padding: 10,
     marginTop: 20,
-    padding: 15,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   modalBackground2: {
     flex: 1,
@@ -360,30 +388,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView2: {
-    width: '90%',
+    width: '85%',
     padding: 20,
     backgroundColor: 'white',
     borderRadius: 10,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  backButtonImage: {
-    width: 20,
-    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalText: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    marginTop: 30,
+    color: '#000000',
   },
   plotInput: {
-    borderColor: '#ddd',
+    borderColor: '#9B9AFF',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    height: 150,
+    borderRadius: 15,
+    padding: 20,
+    height: 200,
     textAlignVertical: 'top',
+    width: '90%',
+    marginBottom: 30,
   },
 });
 

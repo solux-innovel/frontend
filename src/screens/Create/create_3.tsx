@@ -1,8 +1,18 @@
 // src/screens/Create/create_3.tsx
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  Alert,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialImageSource = require('../../img/Create/Create3-1_image.png');
@@ -12,11 +22,11 @@ const backButtonImage = require('../../img/Create/BackSquare.png');
 
 // 장르와 영어 코드를 매핑
 const genreMapping = {
-  '판타지': 'FANTASY',
-  '로맨스': 'ROMANCE',
-  '일상': 'DAILY',
-  '스릴러': 'THRILLER',
-  'SF': 'SF'
+  판타지: 'FANTASY',
+  로맨스: 'ROMANCE',
+  일상: 'DAILY',
+  스릴러: 'THRILLER',
+  SF: 'SF',
 };
 
 // 장르 5가지 가져오기
@@ -98,10 +108,17 @@ const Create_3 = ({ route }) => {
       // 선택된 장르를 영어로 변환
       const selectedGenreCode = genreMapping[selectedGenre];
 
+      // 선택된 장르를 영어로 변환
+      const selectedGenreCode = genreMapping[selectedGenre];
+
       // 선택된 장르 저장
       try {
         if (selectedGenreCode) {
-          await AsyncStorage.setItem(`novelGenre_${novelId}`, selectedGenreCode); // 영어 코드로 저장
+          await AsyncStorage.setItem(
+            `novelGenre_${novelId}`,
+            selectedGenreCode,
+          ); // 영어 코드로 저장
+          
           setIsModalVisible1(false);
           navigation.navigate('Create_4', { novelId }); // id 전달
         } else {
@@ -142,24 +159,31 @@ const Create_3 = ({ route }) => {
               <Image source={closeImage} />
             </Pressable>
             <View style={styles.genreContainer}>
-            {genre.map((genre, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.genreButton,
-                  selectedGenre.includes(genre) && styles.selectedGenreButton,
-                ]}
-                onPress={() => handleGenreSelect(genre)}
-              >
-                <Text style={styles.genreButtonText}>{genre}</Text>
-              </TouchableOpacity>
-            ))}
+              {genre.map((genre, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.genreButton,
+                    selectedGenre === genre && styles.selectedGenreButton,
+                  ]}
+                  onPress={() => handleGenreSelect(genre)}>
+                  <Text
+                    style={[
+                      styles.genreButtonText,
+                      selectedGenre === genre && styles.selectedGenreButtonText,
+                    ]}>
+                    {genre}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
             {/* 세번째 버튼 (추천 내용 확정) */}
             <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.okayButton, {backgroundColor: okayButtonColor}]} onPress={onPressOkayButton}>
-              <Text style={styles.buttonText}>확정</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.okayButton, {backgroundColor: okayButtonColor}]}
+                onPress={onPressOkayButton}>
+                <Text style={styles.buttonText}>저장</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -209,6 +233,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: 'bold',
   },
   modalBackground1: {
     width: '100%',
@@ -220,7 +245,7 @@ const styles = StyleSheet.create({
     margin: 35,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 25,
+    padding: 30,
     alignItems: 'center',
   },
   closeButton: {
@@ -237,9 +262,9 @@ const styles = StyleSheet.create({
   },
   okayButton: {
     height: 40,
-    width: '40%',
-    borderRadius: 15,
-    backgroundColor: "#9B9AFF",
+    width: '30%',
+    borderRadius: 20,
+    backgroundColor: '#9B9AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -256,13 +281,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#E0E0E0',
     alignItems: 'center',
+    width: 100, // 버튼 가로 길이를 동일하게 설정
   },
   selectedGenreButton: {
-    backgroundColor: '#A2A2A2',
+    backgroundColor: '#9B9AFF',
   },
   genreButtonText: {
     color: '#000000',
     fontSize: 16,
+  },
+  selectedGenreButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });
 
