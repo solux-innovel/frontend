@@ -1,3 +1,5 @@
+// src/screens/Create/create_3.tsx
+
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -29,19 +31,19 @@ const genreMapping = {
 
 // 장르 5가지 가져오기
 const fetchGenre = async () => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve(Object.keys(genreMapping)); // 장르의 한국어 이름 반환
     }, 1000); // 1초 후에 장르 반환
   });
 };
 
-const Create_3 = ({route}) => {
+const Create_3 = ({ route }) => {
   const navigation = useNavigation();
-  const {novelId} = route.params; //전달받은 소설 id
+  const { novelId } = route.params; //전달받은 소설 id
 
-  const [buttonColor1, setButtonColor1] = useState('#9B9AFF');
-  const [okayButtonColor, setOkayButtonColor] = useState('#9B9AFF');
+  const [buttonColor1, setButtonColor1] = useState("#9B9AFF");
+  const [okayButtonColor, setOkayButtonColor] = useState("#9B9AFF");
 
   const [isModalVisible1, setIsModalVisible1] = useState(false);
 
@@ -50,11 +52,9 @@ const Create_3 = ({route}) => {
   const [selectedGenre, setSelectedGenre] = useState('');
 
   // 최초 화면 상태 변수
-  const [buttonText, setButtonText] = useState('장르를 선택하고 싶어요');
+  const [buttonText, setButtonText] = useState("장르를 선택하고 싶어요");
   const [image, setImage] = useState(initialImageSource);
-  const [bottomText, setBottomText] = useState(
-    '작성해주신 아이디어 키워드를\n바탕으로 장르를 선택해주세요',
-  );
+  const [bottomText, setBottomText] = useState('작성해주신 아이디어 키워드를\n바탕으로 장르를 선택해주세요');
 
   // 사용자명 상태 변수
   const [userName, setUserName] = useState('');
@@ -62,7 +62,7 @@ const Create_3 = ({route}) => {
   useEffect(() => {
     const fetchUserName = async () => {
       try {
-        const storedUserName = await AsyncStorage.getItem('userName');
+        const storedUserName = await AsyncStorage.getItem('userNickname');
         if (storedUserName) {
           setUserName(storedUserName);
         }
@@ -81,9 +81,9 @@ const Create_3 = ({route}) => {
 
   // 첫 번째 버튼 색상 변경 함수
   const handlePressButton1 = async () => {
-    setButtonColor1('#000000');
+    setButtonColor1("#000000");
     setTimeout(async () => {
-      setButtonColor1('#9B9AFF');
+      setButtonColor1("#9B9AFF");
 
       // 장르를 가져옴
       try {
@@ -98,12 +98,15 @@ const Create_3 = ({route}) => {
 
   const onPressModalClose1 = () => {
     setIsModalVisible1(false);
-  };
+  }
 
   const onPressOkayButton = async () => {
-    setOkayButtonColor('#000000');
+    setOkayButtonColor("#000000");
     setTimeout(async () => {
-      setOkayButtonColor('#9B9AFF');
+      setOkayButtonColor("#9B9AFF");
+
+      // 선택된 장르를 영어로 변환
+      const selectedGenreCode = genreMapping[selectedGenre];
 
       // 선택된 장르를 영어로 변환
       const selectedGenreCode = genreMapping[selectedGenre];
@@ -115,8 +118,9 @@ const Create_3 = ({route}) => {
             `novelGenre_${novelId}`,
             selectedGenreCode,
           ); // 영어 코드로 저장
+          
           setIsModalVisible1(false);
-          navigation.navigate('Create_4', {novelId}); // id 전달
+          navigation.navigate('Create_4', { novelId }); // id 전달
         } else {
           Alert.alert('경고', '장르를 선택해주세요.');
         }
@@ -130,25 +134,20 @@ const Create_3 = ({route}) => {
     setIsModalVisible2(false);
   };
 
-  const handleGenreSelect = genre => {
-    setSelectedGenre(prevSelected => (prevSelected === genre ? '' : genre));
+  const handleGenreSelect = (genre) => {
+    setSelectedGenre((prevSelected) => (prevSelected === genre ? '' : genre));
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.centeredContent}>
-        <Text
-          style={
-            styles.topText
-          }>{`${userName} 창작자님의 소설은\n어떤 장르이길 원하나요?`}</Text>
-        <Image source={image} style={styles.image} />
+        <Text style={styles.topText}>{`${userName} 창작자님의 소설은\n어떤 장르이길 원하나요?`}</Text>
+        <Image source={image} style={styles.image}/>
         <Text style={styles.bottomText}>{bottomText}</Text>
       </View>
 
       {/* 첫번째 버튼 */}
-      <TouchableOpacity
-        style={[styles.button, {backgroundColor: buttonColor1}]}
-        onPress={handlePressButton1}>
+      <TouchableOpacity style={[styles.button, {backgroundColor: buttonColor1}]} onPress={handlePressButton1}>
         <Text style={styles.buttonText}>{buttonText}</Text>
       </TouchableOpacity>
 
@@ -227,7 +226,7 @@ const styles = StyleSheet.create({
     height: 60,
     width: '90%',
     borderRadius: 15,
-    backgroundColor: '#9B9AFF',
+    backgroundColor: "#9B9AFF",
     alignItems: 'center',
     justifyContent: 'center',
   },
