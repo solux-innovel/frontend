@@ -108,9 +108,6 @@ const Create_3 = ({ route }) => {
       // 선택된 장르를 영어로 변환
       const selectedGenreCode = genreMapping[selectedGenre];
 
-      // 선택된 장르를 영어로 변환
-      const selectedGenreCode = genreMapping[selectedGenre];
-
       // 선택된 장르 저장
       try {
         if (selectedGenreCode) {
